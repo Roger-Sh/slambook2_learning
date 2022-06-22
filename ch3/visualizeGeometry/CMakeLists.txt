@@ -13,7 +13,7 @@ include_directories(
 add_definitions(${EIGEN_DEFINITIONS})
 
 # pangolin
-set(Pangolin_DIR "~/Documents/slambook2/3rdparty/Pangolin/build/installed")
+set(Pangolin_DIR "${PROJECT_SOURCE_DIR}/../../3rdparty/Pangolin/build/installed")
 find_package(Pangolin REQUIRED)
 include_directories(${Pangolin_INCLUDE_DIRS})
 
