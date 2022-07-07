@@ -760,13 +760,12 @@ $$
         \mathrm{ATE}_{\mathrm{all}}=\sqrt{\frac{1}{N} \sum_{i=1}^{N}\left\|\log \left(\boldsymbol{T}_{\mathrm{gt}, i}^{-1} \boldsymbol{T}_{\mathrm{esti}, i}\right)^{\vee}\right\|_{2}^{2}}
         $$
         
-
     -   平均平移误差 (ATE, Average Translational Error), $\text{trans}()$ 表示取括号内部变量的平移部分
         $$
         \mathrm{ATE}_{\text {trans }}=\sqrt{\frac{1}{N} \sum_{i=1}^{N}\left\|\operatorname{trans}\left(\boldsymbol{T}_{\mathrm{gt}, i}^{-1} \boldsymbol{T}_{\text {esti, } i}\right)\right\|_{2}^{2}}
         $$
         
-
+    
 -   相对误差 (RPE, Relative Pose Error)
 
     -   相对轨迹误差
@@ -774,7 +773,6 @@ $$
         \mathrm{RPE}_{\mathrm{all}}=\sqrt{\frac{1}{N-\Delta t} \sum_{i=1}^{N-\Delta t} \| \log \left(\left(T_{\mathrm{gt}, i}^{-1} \boldsymbol{T}_{\mathrm{gt}, i+\Delta t}\right)^{-1}\left(\boldsymbol{T}_{\mathrm{est}, i}^{-1} \boldsymbol{T}_{\text {esti }, i+\Delta t}\right)\right)^{\vee} \|_{2}^{2}}
         $$
         
-
     -   相对平移误差
         $$
         \mathrm{RPE}_{\text {trans }}=\sqrt{\frac{1}{N-\Delta t} \sum_{i=1}^{N-\Delta t} \| \operatorname{trans}\left(\left(\boldsymbol{T}_{\mathrm{gt}, i}^{-1} \boldsymbol{T}_{\mathrm{gt}, i+\Delta t}\right)^{-1}\left(\boldsymbol{T}_{\mathrm{est}, i}^{-1} \boldsymbol{T}_{\mathrm{est}, i+\Delta t}\right)\right) \|_{2}^{2}}
@@ -793,7 +791,6 @@ $$
     \end{array}\right] \boldsymbol{p}=s \boldsymbol{R} \boldsymbol{p}+\boldsymbol{t}
     $$
     
-
 -   相似变换群 $\text{Sim}(3)$
     $$
     \operatorname{Sim}(3)=\left\{\boldsymbol{S}=\left[\begin{array}{cc}
@@ -802,7 +799,6 @@ $$
     \end{array}\right] \in \mathbb{R}^{4 \times 4}\right\}
     $$
     
-
 -   相似变换群的李代数 $\mathfrak{sim}(3)$
     $$
     \operatorname{sim}(3)=\left\{\boldsymbol{\zeta} \mid \boldsymbol{\zeta}=\left[\begin{array}{l}
@@ -815,7 +811,6 @@ $$
     \end{array}\right] \in \mathbb{R}^{4 \times 4}\right\}
     $$
     
-
 -   相似变换群的指数映射
     $$
     \begin{align}
@@ -837,7 +832,6 @@ $$
     \end{align}
     $$
     
-
 -   相思变换群的扰动模型
 
     -   $\operatorname{Sim}(3)$ 的 BCH 近似与 $\text{SE}(3)$ 是类似的。我们可以讨论一个点 $\boldsymbol{p}$ 经过相似变换 $\boldsymbol{S} \boldsymbol{p}$ 后, 相对 于 $\boldsymbol{S}$ 的导数。同样地, 存在微分模型和扰动模型两种方式, 而扰动模型较为简单。我们省略推导 过程, 直接给出扰动模型的结果。设给予 $\boldsymbol{S} \boldsymbol{p}$ 左侧一个小扰动 $\exp \left(\boldsymbol{\zeta}^{\wedge}\right)$, 并求 $\boldsymbol{S} \boldsymbol{p}$ 对于扰动的导数。因为 $\boldsymbol{S p}$ 是 4 维的齐次坐标, $\boldsymbol{\zeta}$ 是 7 维向量, 所以该导数应该是 $4 \times 7$ 的雅可比。方便起见, 记 $\boldsymbol{S p}$ 的前 3 维组成向量为 $\boldsymbol{q}$, 那么:
@@ -849,3 +843,109 @@ $$
 \end{array}\right]
 $$
 
+
+
+## 第五讲 - 相机与图像
+
+### 相机模型
+
+#### 针孔相机模型
+
+- 相机内参矩阵 $\boldsymbol{K}$:
+
+$$
+\begin{align}
+\left(\begin{array}{l}
+u \\
+v \\
+1
+\end{array}\right)=\frac{1}{Z}\left(\begin{array}{ccc}
+f_{x} & 0 & c_{x} \\
+0 & f_{y} & c_{y} \\
+0 & 0 & 1
+\end{array}\right)\left(\begin{array}{l}
+X \\
+Y \\
+Z
+\end{array}\right) \stackrel{\text { def }}{=} \frac{1}{Z} \boldsymbol{K} \boldsymbol{P}  
+\end{align}
+$$
+
+- 相机外参矩阵 $\boldsymbol{T}$:
+  $$
+  Z \boldsymbol{P}_{u v}=Z\left[\begin{array}{c}
+  u \\
+  v \\
+  1
+  \end{array}\right]=\boldsymbol{K}\left(\boldsymbol{R} \boldsymbol{P}_{\mathrm{w}}+\boldsymbol{t}\right)=\boldsymbol{K} \boldsymbol{T} \boldsymbol{P}_{\mathrm{w}}
+  $$
+
+- 归一化坐标:
+  $$
+  \left(\boldsymbol{R} \boldsymbol{P}_{\mathrm{w}}+\boldsymbol{t}\right)=\underbrace{[X, Y, Z]^{\mathrm{T}}}_{\text {相机坐标 }} \rightarrow \underbrace{[X / Z, Y / Z, 1]^{\mathrm{T}}}_{\text {归一化坐标 }} .
+  $$
+  
+
+#### 畸变模型
+
+- 径向畸变
+
+  - 桶形畸变
+
+  - 枕形畸变
+
+  - $$
+    \begin{aligned}
+    &x_{\text {distorted }}=x\left(1+k_{1} r^{2}+k_{2} r^{4}+k_{3} r^{6}\right) \\
+    &y_{\text {distorted }}=y\left(1+k_{1} r^{2}+k_{2} r^{4}+k_{3} r^{6}\right)
+    \end{aligned}
+    $$
+
+    
+
+- 切向畸变
+
+  - $$
+    \begin{aligned}
+    x_{\text {distorted }} &=x+2 p_{1} x y+p_{2}\left(r^{2}+2 x^{2}\right) \\
+    y_{\text {distorted }} &=y+p_{1}\left(r^{2}+2 y^{2}\right)+2 p_{2} x y
+    \end{aligned}
+    $$
+
+- 通过5个畸变系数, 将归一化坐标 $[x,y]$ 转换为像素坐标: 
+
+  - $$
+    \left\{\begin{array}{l}
+    x_{\text {distorted }}=x\left(1+k_{1} r^{2}+k_{2} r^{4}+k_{3} r^{6}\right)+2 p_{1} x y+p_{2}\left(r^{2}+2 x^{2}\right) \\
+    y_{\text {distorted }}=y\left(1+k_{1} r^{2}+k_{2} r^{4}+k_{3} r^{6}\right)+p_{1}\left(r^{2}+2 y^{2}\right)+2 p_{2} x y
+    \end{array}\right.
+    $$
+
+  - $$
+    \left\{\begin{array}{l}
+    u=f_{x} x_{\text {distorted }}+c_{x} \\
+    v=f_{y} y_{\text {distorted }}+c_{y}
+    \end{array}\right.
+    $$
+
+    
+
+#### 双目相机模型
+
+<img src="VSLAM14Chapter_note.assets/image-20220707221244599.png" alt="image-20220707221244599" style="zoom:50%;" />
+$$
+\frac{z-f}{z}=\frac{b-u_{\mathrm{L}}+u_{\mathrm{R}}}{b}
+$$
+
+$$
+z=\frac{f b}{d}, \quad d \stackrel{\text { def }}{=} u_{\mathrm{L}}-u_{\mathrm{R}}
+$$
+
+#### RGB-D 相机模型
+
+- 红外结构光 Structured light
+  - Kinect Gen1
+  - Intel Realsense
+- 飞行时间 ToF Time-of-Flight
+  - Kinect Gen2
+  - ToF cam

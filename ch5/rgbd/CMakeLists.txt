@@ -1,7 +1,5 @@
-find_package(Sophus REQUIRED)
-include_directories(${Sophus_INCLUDE_DIRS})
+PROJECT(rgbd)
 
-find_package(Pangolin REQUIRED)
-
+# joinmap
 add_executable(joinMap joinMap.cpp)
-target_link_libraries(joinMap ${OpenCV_LIBS} ${Pangolin_LIBRARIES})
+target_link_libraries(joinMap ${OpenCV_LIBS} ${Pangolin_LIBRARIES} Sophus::Sophus)
