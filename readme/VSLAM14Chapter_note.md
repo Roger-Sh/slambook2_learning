@@ -587,7 +587,7 @@ $$
 
 #### $\mathfrak{s e}(3)$ 指数映射与对数映射
 
- $\mathfrak{s e}(3)$ 到  $\text{SO}(3)$ 的指数映射：
+ $\mathfrak{s e}(3)$ 到  $\text{SE}(3)$ 的指数映射：
 $$
 \begin{align}
 \boldsymbol{T} 
@@ -732,6 +732,8 @@ $$
 \frac{\partial(\boldsymbol{R} \boldsymbol{p})}{\partial \boldsymbol{\varphi}}=\lim _{\boldsymbol{\varphi} \rightarrow 0} \frac{\exp \left(\boldsymbol{\varphi}^{\wedge}\right) \exp \left(\boldsymbol{\phi}^{\wedge}\right) \boldsymbol{p}-\exp \left(\boldsymbol{\phi}^{\wedge}\right) \boldsymbol{p}}{\boldsymbol{\varphi}} = -(\boldsymbol{R}\boldsymbol{p})^{\wedge}
 $$
 
+
+
 #### $\text{SE}(3)$ 上的求导
 
 ##### 扰动模型求导法(左乘)
@@ -747,3 +749,103 @@ $$
 \end{array}\right] \stackrel{\text { def }}{=}(\boldsymbol{T} \boldsymbol{p})^{\odot}
 \end{align}
 $$
+
+
+### 评估轨迹误差
+
+-   绝对误差  (ATE, Absolute Trajectory Error)
+
+    -   绝对轨迹误差 (ATE, Absolute Trajectory Error), 实际也是均方根误差 (RMSE, Root-Mean-Squared Error)
+        $$
+        \mathrm{ATE}_{\mathrm{all}}=\sqrt{\frac{1}{N} \sum_{i=1}^{N}\left\|\log \left(\boldsymbol{T}_{\mathrm{gt}, i}^{-1} \boldsymbol{T}_{\mathrm{esti}, i}\right)^{\vee}\right\|_{2}^{2}}
+        $$
+        
+
+    -   平均平移误差 (ATE, Average Translational Error), $\text{trans}()$ 表示取括号内部变量的平移部分
+        $$
+        \mathrm{ATE}_{\text {trans }}=\sqrt{\frac{1}{N} \sum_{i=1}^{N}\left\|\operatorname{trans}\left(\boldsymbol{T}_{\mathrm{gt}, i}^{-1} \boldsymbol{T}_{\text {esti, } i}\right)\right\|_{2}^{2}}
+        $$
+        
+
+-   相对误差 (RPE, Relative Pose Error)
+
+    -   相对轨迹误差
+        $$
+        \mathrm{RPE}_{\mathrm{all}}=\sqrt{\frac{1}{N-\Delta t} \sum_{i=1}^{N-\Delta t} \| \log \left(\left(T_{\mathrm{gt}, i}^{-1} \boldsymbol{T}_{\mathrm{gt}, i+\Delta t}\right)^{-1}\left(\boldsymbol{T}_{\mathrm{est}, i}^{-1} \boldsymbol{T}_{\text {esti }, i+\Delta t}\right)\right)^{\vee} \|_{2}^{2}}
+        $$
+        
+
+    -   相对平移误差
+        $$
+        \mathrm{RPE}_{\text {trans }}=\sqrt{\frac{1}{N-\Delta t} \sum_{i=1}^{N-\Delta t} \| \operatorname{trans}\left(\left(\boldsymbol{T}_{\mathrm{gt}, i}^{-1} \boldsymbol{T}_{\mathrm{gt}, i+\Delta t}\right)^{-1}\left(\boldsymbol{T}_{\mathrm{est}, i}^{-1} \boldsymbol{T}_{\mathrm{est}, i+\Delta t}\right)\right) \|_{2}^{2}}
+        $$
+        
+
+
+
+### 相似变换群 $\text{Sim}(3)$ 与李代数
+
+-   相似变换
+    $$
+    \boldsymbol{p}^{\prime}=\left[\begin{array}{cc}
+    s \boldsymbol{R} & \boldsymbol{t} \\
+    \mathbf{0}^{\mathrm{T}} & 1
+    \end{array}\right] \boldsymbol{p}=s \boldsymbol{R} \boldsymbol{p}+\boldsymbol{t}
+    $$
+    
+
+-   相似变换群 $\text{Sim}(3)$
+    $$
+    \operatorname{Sim}(3)=\left\{\boldsymbol{S}=\left[\begin{array}{cc}
+    s \boldsymbol{R} & \boldsymbol{t} \\
+    \mathbf{0}^{\mathrm{T}} & 1
+    \end{array}\right] \in \mathbb{R}^{4 \times 4}\right\}
+    $$
+    
+
+-   相似变换群的李代数 $\mathfrak{sim}(3)$
+    $$
+    \operatorname{sim}(3)=\left\{\boldsymbol{\zeta} \mid \boldsymbol{\zeta}=\left[\begin{array}{l}
+    \boldsymbol{\rho} \\
+    \boldsymbol{\phi} \\
+    \sigma
+    \end{array}\right] \in \mathbb{R}^{7}, \boldsymbol{\zeta}^{\wedge}=\left[\begin{array}{cc}
+    \sigma \boldsymbol{I}+\boldsymbol{\phi}^{\wedge} & \boldsymbol{\rho} \\
+    \mathbf{0}^{\mathrm{T}} & 0
+    \end{array}\right] \in \mathbb{R}^{4 \times 4}\right\}
+    $$
+    
+
+-   相似变换群的指数映射
+    $$
+    \begin{align}
+    \exp \left(\boldsymbol{\zeta}^{\wedge}\right) =& \left[\begin{array}{cc}
+    \mathrm{e}^{\sigma} \exp \left(\phi^{\wedge}\right) & \boldsymbol{J}_{s} \rho \\
+    \mathbf{0}^{\mathrm{T}} & 1
+    \end{array}\right],\\
+    
+    s =& \mathrm{e}^{\sigma}, 
+    \boldsymbol{R}=\exp \left(\boldsymbol{\phi}^{\wedge}\right), \boldsymbol{t}=\boldsymbol{J}_{s} \boldsymbol{\rho}, \\
+    
+    
+    \boldsymbol{J}_{s} =& \frac{\mathrm{e}^{\sigma}-1}{\sigma} \boldsymbol{I}+\frac{\sigma \mathrm{e}^{\sigma} \sin \theta+\left(1-\mathrm{e}^{\sigma} \cos \theta\right) \theta}{\sigma^{2}+\theta^{2}} \boldsymbol{a}^{\wedge} \\
+    
+    &+\left(\frac{\mathrm{e}^{\sigma}-1}{\sigma}-\frac{\left(\mathrm{e}^{\sigma} \cos \theta-1\right) \sigma+\left(\mathrm{e}^{\sigma} \sin \theta\right) \theta}{\sigma^{2}+\theta^{2}}\right) \boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} .
+    
+    
+    
+    \end{align}
+    $$
+    
+
+-   相思变换群的扰动模型
+
+    -   $\operatorname{Sim}(3)$ 的 BCH 近似与 $\text{SE}(3)$ 是类似的。我们可以讨论一个点 $\boldsymbol{p}$ 经过相似变换 $\boldsymbol{S} \boldsymbol{p}$ 后, 相对 于 $\boldsymbol{S}$ 的导数。同样地, 存在微分模型和扰动模型两种方式, 而扰动模型较为简单。我们省略推导 过程, 直接给出扰动模型的结果。设给予 $\boldsymbol{S} \boldsymbol{p}$ 左侧一个小扰动 $\exp \left(\boldsymbol{\zeta}^{\wedge}\right)$, 并求 $\boldsymbol{S} \boldsymbol{p}$ 对于扰动的导数。因为 $\boldsymbol{S p}$ 是 4 维的齐次坐标, $\boldsymbol{\zeta}$ 是 7 维向量, 所以该导数应该是 $4 \times 7$ 的雅可比。方便起见, 记 $\boldsymbol{S p}$ 的前 3 维组成向量为 $\boldsymbol{q}$, 那么:
+
+$$
+\frac{\partial \boldsymbol{S} \boldsymbol{p}}{\partial \boldsymbol{\zeta}}=\left[\begin{array}{ccc}
+\boldsymbol{I} & -\boldsymbol{q}^{\wedge} & \boldsymbol{q} \\
+\mathbf{0}^{\mathrm{T}} & \boldsymbol{0}^{\mathrm{T}} & 0
+\end{array}\right]
+$$
+

@@ -5,9 +5,9 @@ option(USE_UBUNTU_20 "Set to ON if you are using Ubuntu 20.04" OFF)
 set(Pangolin_DIR "${PROJECT_SOURCE_DIR}/../../3rdparty/Pangolin/build/installed")
 find_package(Pangolin REQUIRED)
 
-# # Sophus
-# set(Sophus_DIR "${PROJECT_SOURCE_DIR}/../../3rdparty/Sophus/build/installed")
-# find_package(Sophus REQUIRED)
+# Sophus
+set(Sophus_DIR "${PROJECT_SOURCE_DIR}/../../3rdparty/Sophus/build/installed")
+find_package(Sophus REQUIRED)
 
 # fmt for ubuntu 20
 if(USE_UBUNTU_20)
