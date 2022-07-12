@@ -1304,17 +1304,91 @@ $$
 
 #### 列文伯格一马夸尔特方法
 
+##### 信赖区域
+
 -   相比高斯牛顿, 给 $\Delta\boldsymbol{x}$ 添加一个范围, 信赖区域 (Trust Region)
 
--   那么, 如何确定这个信赖区域的范围呢? 一个比较好的方法是根据我们的近似模型跟实际函 数之间的差异来确定: 如果差异小, 说明近似效果好, 我们扩大近似的范围; 反之, 如果差异大, 就缩小近似的范围。我们定义一个指标 $\rho$ 来刻画近似的好坏程度
+-   那么, 如何确定这个信赖区域的范围呢? 一个比较好的方法是根据我们的近似模型跟实际函数之间的差异来确定: 如果差异小, 说明近似效果好, 我们扩大近似的范围; 反之, 如果差异大, 就缩小近似的范围。我们定义一个指标 $\rho$ 来刻画近似的好坏程度
     $$
     \rho=\frac{f(\boldsymbol{x}+\Delta \boldsymbol{x})-f(\boldsymbol{x})}{\boldsymbol{J}(\boldsymbol{x})^{\mathrm{T}} \Delta \boldsymbol{x}}
     $$
 
 -   $\rho$ 的分子是实际函数下降的值, 分母是近似模型下降的值。如果 $\rho$ 接近于 1, 则近似是好的。如 果 $\rho$ 太小, 说明实际减小的值远少于近似减小的值, 则认为近似比较差, 需要缩小近似范围。反 之, 如果 $\rho$ 比较大, 则说明实际下降的比预计的更大，我们可以放大近似范围。
 
+##### 算法步骤
+
+1. 给定初始值 $x_{0}$, 以及初始优化半径 $\mu_{\text {。 }}$
+
+2. 对于第 $k$ 次迭代, 在高斯牛顿法的基础上加上信赖区域, 求解:
+    $$
+    \min _{\Delta \boldsymbol{x}_{k}} \frac{1}{2}\left\|f\left(\boldsymbol{x}_{k}\right)+\boldsymbol{J}\left(\boldsymbol{x}_{k}\right)^{\mathrm{T}} \Delta \boldsymbol{x}_{k}\right\|^{2}, \quad \text { s.t. } \quad\left\|\boldsymbol{D} \Delta \boldsymbol{x}_{k}\right\|^{2} \leqslant \mu,
+    $$
+    其中, $\mu$ 是信赖区域的半径, $\boldsymbol{D}$ 为系数矩阵. 可以理解为把增量限定于一个半径为 $\mu$ 的球中, 带上 $\boldsymbol{D}$ 之后可以看成椭球, 比如可以为 $\boldsymbol{I}$ 即为球. 这里通过拉格朗日乘子 $\lambda$ 来求解带不等式约束的梯度优化问题。
+    $$
+    \mathcal{L}\left(\Delta \boldsymbol{x}_{k}, \lambda\right) =\frac{1}{2}\left\|f\left(\boldsymbol{x}_{k}\right) + \boldsymbol{J}\left(\boldsymbol{x}_{k}\right)^{\mathrm{T}} \Delta \boldsymbol{x}_{k}\right\|^{2}+\frac{\lambda}{2}\left(\left\|\boldsymbol{D} \Delta \boldsymbol{x}_{k}\right\|^{2}-\mu\right)
+    $$
+    
+    $$
+    \begin{align}
+    (\boldsymbol{H} + \lambda \boldsymbol{D}^{\mathrm{T}}\boldsymbol{D})\Delta \boldsymbol{x}_k &= \boldsymbol{g} 
+    
+    \\
+    \\
+    
+    (\boldsymbol{H} + \lambda \boldsymbol{I})\Delta \boldsymbol{x}_k &= \boldsymbol{g}, \text{with }\boldsymbol{D} = \boldsymbol{I} \\
+    
+    
+    
+    \end{align}
+    $$
+    我们看到, 一方面, 当参数 $\lambda$ 比较小时, $H$ 占主要地位, 这说明二次近似模型在该范围内 是比较好的, 列文伯格一马夸尔特方法更接近于高斯牛顿法。另一方面, 当 $\lambda$ 比较大时, $\lambda \boldsymbol{I}$ 占 据主要地位, 列文伯格一马夸尔特方法更接近于一阶梯度下降法（即最速下降）, 这说明附近的 二次近似不够好。列文伯格一马㚎尔特方法的求解方式, 可在一定程度上避免线性方程组的系数 矩阵的非奇异和病态问题, 提供更稳定、更准确的增量 $\Delta \boldsymbol{x}_{\text {。 }}$
+
+3. 计算 $\rho_{\circ}$
+    $$
+    \rho=\frac{f(\boldsymbol{x}+\Delta \boldsymbol{x})-f(\boldsymbol{x})}{\boldsymbol{J}(\boldsymbol{x})^{\mathrm{T}} \Delta \boldsymbol{x}}
+    $$
+
+4. 若 $\rho>\frac{3}{4}$, 则设置 $\mu=2 \mu_{\circ}$
+
+5. 若 $\rho<\frac{1}{4}$, 则设置 $\mu=0.5 \mu_{\text {。 }}$
+
+6. 如果 $\rho$ 大于某阈值, 则认为近似可行。令 $\boldsymbol{x}_{k+1}=\boldsymbol{x}_{k}+\Delta \boldsymbol{x}_{k}$ 。
+
+7. 判断算法是否收敛。如不收玫则返回第 2 步, 否则结束。
+
 
 
 
 
 ### 实践 - 曲线拟合问题
+
+-   待拟合的曲线模型, $a, b, c$ 为曲线的参数, $w$ 为高斯噪声, 满足 $w \sim\left(0, \sigma^{2}\right)$ 。
+    $$
+    y=\exp \left(a x^{2}+b x+c\right)+w
+    $$
+
+-   目标函数
+    $$
+    \min _{a, b, c} \frac{1}{2} \sum_{i=1}^{N}\left\|y_{i}-\exp \left(a x_{i}^{2}+b x_{i}+c\right)\right\|^{2}
+    $$
+
+-   误差项
+    $$
+    e_{i}=y_{i}-\exp \left(a x_{i}^{2}+b x_{i}+c\right)
+    $$
+
+-   雅可比矩阵
+    $$
+    \begin{align}
+    \boldsymbol{J}_{i}&=\left[\frac{\partial e_{i}}{\partial a}, \frac{\partial e_{i}}{\partial b}, \frac{\partial e_{i}}{\partial c}\right]^{\mathrm{T}}
+    
+    \\
+    \\
+    
+    \frac{\partial e_{i}}{\partial a}&=-x_{i}^{2} \exp \left(a x_{i}^{2}+b x_{i}+c\right) \\
+    \frac{\partial e_{i}}{\partial b}&=-x_{i} \exp \left(a x_{i}^{2}+b x_{i}+c\right) \\
+    \frac{\partial e_{i}}{\partial c}&=-\exp \left(a x_{i}^{2}+b x_{i}+c\right)
+    
+    \end{align}
+    $$
+    

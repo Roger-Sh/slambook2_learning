@@ -1,31 +1,35 @@
-cmake_minimum_required(VERSION 2.8)
-project(ch6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+PROJECT(ch6)
 
-set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS "-std=c++14 -O3")
-
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-# OpenCV
-find_package(OpenCV REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS})
-
-# Ceres
-find_package(Ceres REQUIRED)
-include_directories(${CERES_INCLUDE_DIRS})
+# SET(CMAKE_BUILD_TYPE Release)
+SET(CMAKE_CXX_FLAGS "-std=c++14 -O3")
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 # g2o
-find_package(G2O REQUIRED)
-include_directories(${G2O_INCLUDE_DIRS})
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../3rdparty/g2o/cmake_modules)
+SET(G2O_ROOT ${PROJECT_SOURCE_DIR}/../3rdparty/g2o/build/installed)
+FIND_PACKAGE(G2O REQUIRED)
+INCLUDE_DIRECTORIES(${G2O_INCLUDE_DIR})
+
+# OpenCV
+SET(OpenCV_DIR "~/App/opencv/opencv-3.4/build")
+FIND_PACKAGE(OpenCV REQUIRED)
+INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
+
+# Ceres
+# SET(Ceres_DIR "${PROJECT_SOURCE_DIR}/../3rdparty/ceres-solver/build/installed")
+FIND_PACKAGE(Ceres REQUIRED PATHS "${PROJECT_SOURCE_DIR}/../3rdparty/ceres-solver/build/installed")
+INCLUDE_DIRECTORIES(${Ceres_INCLUDE_DIRS})
 
 # Eigen
-include_directories("/usr/include/eigen3")
+INCLUDE_DIRECTORIES("/usr/include/eigen3")
 
-add_executable(gaussNewton gaussNewton.cpp)
-target_link_libraries(gaussNewton ${OpenCV_LIBS})
+ADD_EXECUTABLE(gaussNewton gaussNewton.cpp)
+TARGET_LINK_LIBRARIES(gaussNewton ${OpenCV_LIBS})
 
-add_executable(ceresCurveFitting ceresCurveFitting.cpp)
-target_link_libraries(ceresCurveFitting ${OpenCV_LIBS} ${CERES_LIBRARIES})
+ADD_EXECUTABLE(ceresCurveFitting ceresCurveFitting.cpp)
+TARGET_LINK_LIBRARIES(ceresCurveFitting ${OpenCV_LIBS} ${CERES_LIBRARIES})
 
-add_executable(g2oCurveFitting g2oCurveFitting.cpp)
-target_link_libraries(g2oCurveFitting ${OpenCV_LIBS} ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY})
+ADD_EXECUTABLE(g2oCurveFitting g2oCurveFitting.cpp)
+# TARGET_LINK_LIBRARIES(g2oCurveFitting ${OpenCV_LIBS} ${G2O_INCLUDE_DIRS} ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY})
+TARGET_LINK_LIBRARIES(g2oCurveFitting ${OpenCV_LIBS} ${G2O_INCLUDE_DIR})
