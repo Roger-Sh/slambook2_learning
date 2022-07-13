@@ -5,12 +5,6 @@ PROJECT(ch6)
 SET(CMAKE_CXX_FLAGS "-std=c++14 -O3")
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-# g2o
-LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../3rdparty/g2o/cmake_modules)
-SET(G2O_ROOT ${PROJECT_SOURCE_DIR}/../3rdparty/g2o/build/installed)
-FIND_PACKAGE(G2O REQUIRED)
-INCLUDE_DIRECTORIES(${G2O_INCLUDE_DIR})
-
 # OpenCV
 SET(OpenCV_DIR "~/App/opencv/opencv-3.4/build")
 FIND_PACKAGE(OpenCV REQUIRED)
@@ -21,15 +15,25 @@ INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 FIND_PACKAGE(Ceres REQUIRED PATHS "${PROJECT_SOURCE_DIR}/../3rdparty/ceres-solver/build/installed")
 INCLUDE_DIRECTORIES(${Ceres_INCLUDE_DIRS})
 
+# g2o
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../3rdparty/g2o/cmake_modules)
+SET(G2O_ROOT ${PROJECT_SOURCE_DIR}/../3rdparty/g2o/build/installed)
+SET(G2O_INCLUDE ${PROJECT_SOURCE_DIR}/../3rdparty/g2o/build/installed/include)
+FIND_PACKAGE(G2O REQUIRED)
+INCLUDE_DIRECTORIES(${G2O_ROOT})
+INCLUDE_DIRECTORIES(${G2O_INCLUDE})
+
 # Eigen
 INCLUDE_DIRECTORIES("/usr/include/eigen3")
 
-ADD_EXECUTABLE(gaussNewton gaussNewton.cpp)
+# gaussNewton
+ADD_EXECUTABLE(gaussNewton src/gaussNewton.cpp)
 TARGET_LINK_LIBRARIES(gaussNewton ${OpenCV_LIBS})
 
-ADD_EXECUTABLE(ceresCurveFitting ceresCurveFitting.cpp)
+# ceresCurveFitting
+ADD_EXECUTABLE(ceresCurveFitting src/ceresCurveFitting.cpp)
 TARGET_LINK_LIBRARIES(ceresCurveFitting ${OpenCV_LIBS} ${CERES_LIBRARIES})
 
-ADD_EXECUTABLE(g2oCurveFitting g2oCurveFitting.cpp)
-# TARGET_LINK_LIBRARIES(g2oCurveFitting ${OpenCV_LIBS} ${G2O_INCLUDE_DIRS} ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY})
-TARGET_LINK_LIBRARIES(g2oCurveFitting ${OpenCV_LIBS} ${G2O_INCLUDE_DIR})
+# g2oCurveFitting
+ADD_EXECUTABLE(g2oCurveFitting src/g2oCurveFitting.cpp)
+TARGET_LINK_LIBRARIES(g2oCurveFitting ${OpenCV_LIBS} ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY})

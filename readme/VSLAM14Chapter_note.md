@@ -1362,6 +1362,8 @@ $$
 
 ### 实践 - 曲线拟合问题
 
+#### 手写高斯牛顿法
+
 -   待拟合的曲线模型, $a, b, c$ 为曲线的参数, $w$ 为高斯噪声, 满足 $w \sim\left(0, \sigma^{2}\right)$ 。
     $$
     y=\exp \left(a x^{2}+b x+c\right)+w
@@ -1391,4 +1393,163 @@ $$
     
     \end{align}
     $$
+
+-   高斯牛顿法的增量方程为
+    $$
+    \left(\sum_{i=1}^{100} \boldsymbol{J}_{i}\left(\sigma^{2}\right)^{-1} \boldsymbol{J}_{i}^{\mathrm{T}}\right) \Delta \boldsymbol{x}_{k}=\sum_{i=1}^{100}-\boldsymbol{J}_{i}\left(\sigma^{2}\right)^{-1} e_{i}
+    $$
+
+-   求解 $\boldsymbol{A}\boldsymbol{x} = \boldsymbol{b}$
+    -   LU分解, 求解 $\boldsymbol{L}\boldsymbol{U}\boldsymbol{x} = \boldsymbol{b}$
+    -   LUP分解, 求解 $\boldsymbol{L}\boldsymbol{U}\boldsymbol{P}\boldsymbol{x} = \boldsymbol{b}$
+    -   Cholesky分解, 当A是SPD 对称正定矩阵时, 求解 $\boldsymbol{L}\boldsymbol{L}^{\text{T}}\boldsymbol{x} = \boldsymbol{b}$ 
+
+
+
+#### Ceres曲线拟合, 最小二乘求解器
+
+-   Ceres求解的最小二乘问题, 带边界的核函数最小二乘
+    $$
+    \begin{aligned}
+    &\min _{x} \frac{1}{2} \sum_{i} \rho_{i}\left(\left\|f_{i}\left(x_{i_{1}}, \cdots, x_{i_{n}}\right)\right\|^{2}\right) \\
+    &\text { s.t. } l_{j} \leqslant x_{j} \leqslant u_{j} .
+    \end{aligned}
+    $$
+
+    -   参数块, 即优化变量: $x_{1}, \cdots, x_{n}$
+    -   残差块, 即代价函数或误差项: $f_i$ 
+    -   优化变量的上限或下限: $l_j$, $u_j$
+    -   核函数: $\boldsymbol{\rho}(\cdot)$
+
+-   Ceres求解步骤
+
+    -   定义参数块, 可以是向量, 四元数, 李代数等
+    -   定义残差块
+    -   定义残差块的雅可比计算方式
+    -   设置Problem对象, 设置配置信息如迭代次数, 中止条件等
+    -   调用Solve求解
+
+
+
+
+
+#### G2O曲线拟合, 基于图优化的非线性优化
+
+##### 图优化理论简介
+
+-   图优化: 把优化问题表现成图, 能直观看到优化问题的表现
+-   图, 贝叶斯图, 因子图: 
+    -   顶点Vertex, 优化变量
+    -   边Edge, 误差项
+
+![image-20220713160400608](VSLAM14Chapter_note.assets/image-20220713160400608.png)
+
+
+
+##### 使用G2O拟合曲线
+
+-   当前曲线拟合问题对应的因子图, 只有一个顶点, 带优化的参数 $a,b,c$
+    $$
+    y=\exp \left(a x^{2}+b x+c\right)+w
+    $$
     
+
+![image-20220713161309959](VSLAM14Chapter_note.assets/image-20220713161309959.png)
+
+-   G2O 优化步骤
+    1.  定义顶点和边的类型
+    2.  构建图
+    3.  选择优化算法
+    4.  调用G2O优化
+
+
+
+
+
+
+
+
+
+## 第七讲 - 视觉里程计 1
+
+### 特征点法
+
+#### 特征点
+
+-   特质
+    -   可重复性
+    -   可区别性
+    -   高效率
+    -   本地性
+-   特征点组成
+    -   关键点 Key-Point, 特征点在图像中的位置
+    -   描述子 Descriptor, 描述了关键点周围像素的信息
+        -   外观相思的特征应该有相似的描述子
+-   经典的特征点
+    -   SIFT, (Scale-Invariant Feature Transform)
+        -   尺度不变特征变换
+        -   计算量大
+    -   SURF
+    -   FAST 关键点
+        -   没有描述子
+    -   ORB, (Oriented FAST and Rotated BRIEF)
+        -   改进了FAST检测子没有方向性的问题
+        -   速度极快的二进制描述子BRIEF (Binary Robust Independent Elementary Feature)
+
+#### ORB特征
+
+ORB特征的组成
+
+-   关键点 - Oriented FAST
+
+    -   改进的FAST角点, 提供了特征点的主方向
+
+    -   只比较像素与领域的亮度大小
+
+    -   FAST 提取步骤
+
+        1.  在图像中选取像素 $p$, 假设它的亮度为 $I_{p}$ 。
+        2.  设置一个阈值 $T$ ( 比如, $I_{p}$ 的 $20 \%$ )。
+        3.  以像素 $p$ 为中心，选取半径为 3 的圆上的 16 个像素点。
+        4.  假如选取的圆上有连续的 $N$ 个点的亮度大于 $I_{p}+T$ 或小于 $I_{p}-T$, 那么像素 $p$ 可以被 认为是特征点 ( $N$ 通常取 12, 即 FAST-12。其他常用的 $N$ 取值为 9 和 11 , 它们分别被 称为 FAST-9 和 FAST-11)。
+            1.  FAST-12 预测试操作, 直接检测1, 5, 9, 13的像素亮度, 只有当这四个中有三个同时大于 $I_{p}+T$ 或小于 $I_{p}-T$, 才有可能为角点, 大大加速了角点检测
+            2.  非极大值抑制, 避免角点集中
+        5.  循环以上四步, 对每一个像素执行相同的操作。
+
+    -   ![image-20220713181633028](VSLAM14Chapter_note.assets/image-20220713181633028.png)
+
+    -   针对FAST角点不具有方向性和尺度的问题, ORB添加了尺度和旋转的描述, 称为Orient FAST
+
+        -   尺度: 在图像金字塔每一层上检测角点, 匹配不同层的特征来实现尺度变化比如前进或后退时的特征匹配
+
+        -   旋转: 灰度质心法 Intensity Centroid, 计算特征点附近的图像灰度质心
+
+            1.  在一个小的图像块B中, 定义图像块的矩为
+                $$
+                m_{pq} = \sum_{x,y\in B} x^p y^q I(x,y), \quad p,q={0,1}
+                $$
+
+            2.  通过矩可以找到图像块的质心:
+                $$
+                C=\left(\frac{m_{10}}{m_{00}}, \frac{m_{01}}{m_{00}}\right) .
+                $$
+
+            3.  连接图像块的几何中心 $O$ 与质心 $C$, 得到一个方向向量 $\overrightarrow{O C}$, 于是特征点的方向可以 定义为
+                $$
+                \theta=\arctan \left(m_{01} / m_{10}\right) .
+                $$
+
+-   描述子 - BRIEF (Binary Robust Independent Elementary Feature)
+
+    -   BRIEF 是一种二进制描述子, 其描述向量由许多个 0 和 1 组成, 这里的 0 和 1 编码了关键点 附近两个随机像素 (比如 $p$ 和 $q$ ) 的大小关系: 如果 $p$ 比 $q$ 大, 则取 1 , 反之就取 0 。如果我们取 了 128 个这样的 $p, q$, 则最后得到 128 维由 $0 、 1$ 组成的向量 ${ }^{[44]}$ 。BRIEF 使用了随机选点的比较, 速度非常快, 而且由于使用了二进制表达, 存储起来也十分方便, 适用于实时的图像匹配。原始 的 BRIEF 描述子不具有旋转不变性, 因此在图像发生旋转时容易丢失。而 ORB 在 FAST 特征点 提取阶段计算了关键点的方向, 所以可以利用方向信息, 计算旋转之后的 “Steer BRIEF” 特征使 ORB 的描述子具有较好的旋转不变性。
+
+
+
+#### 特征匹配
+
+-   匹配方式
+    -   暴力匹配
+    -   快速近似最近邻 (FLANN)
+-   匹配距离
+    -   欧式距离
+    -   汉明距离, 两个二进制串之间的不同位数的个数
