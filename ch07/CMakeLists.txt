@@ -4,11 +4,26 @@ project(vo1)
 set(CMAKE_BUILD_TYPE "Release")
 add_definitions("-DENABLE_SSE")
 set(CMAKE_CXX_FLAGS "-std=c++11 -O2 ${SSE_FLAGS} -msse4")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-find_package(OpenCV 3 REQUIRED)
+
+# OpenCV
+set(OpenCV_DIR "~/App/opencv/opencv-3.4/build")
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 find_package(G2O REQUIRED)
+
+
+# Sophus
+set(Sophus_DIR "${PROJECT_SOURCE_DIR}/../3rdparty/Sophus/build/installed")
 find_package(Sophus REQUIRED)
+include_directories(${Sophus_INCLUDE_DIRS})
+
+
 
 include_directories(
         ${OpenCV_INCLUDE_DIRS}
