@@ -11,7 +11,6 @@ FIND_PACKAGE(OpenCV REQUIRED)
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 
 # Ceres
-# SET(Ceres_DIR "${PROJECT_SOURCE_DIR}/../3rdparty/ceres-solver/build/installed")
 FIND_PACKAGE(Ceres REQUIRED PATHS "${PROJECT_SOURCE_DIR}/../3rdparty/ceres-solver/build/installed")
 INCLUDE_DIRECTORIES(${Ceres_INCLUDE_DIRS})
 
