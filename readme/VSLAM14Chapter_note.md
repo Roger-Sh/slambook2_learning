@@ -1472,7 +1472,7 @@ $$
 
 ## 第七讲 - 视觉里程计 1
 
-### 特征点法
+### 特征点法 (以ORB特征为例)
 
 #### 特征点
 
@@ -1553,3 +1553,330 @@ ORB特征的组成
 -   匹配距离
     -   欧式距离
     -   汉明距离, 两个二进制串之间的不同位数的个数
+
+
+
+#### 计算机相机运动
+
+根据相机原理和获取的不同匹配点, 分为以下情况来估计相机的运动
+
+-   2D-2D: 单目相机, 两帧图像获取两组2D点,估计运动, 使用**对极几何**
+-   3D-3D: 双目/RGB-D/ToF 等深度相机, 两组3D点估计运动, 使用**ICP**
+-   3D-2D: 3D投影到2D, 估计相机运动, 使用**PnP**
+
+
+
+### 2D-2D 对极几何
+
+#### 对极约束
+
+-   两帧图像$I_1$, $I_2$
+-   第一帧到第二帧的相机运动 $\boldsymbol{R}$, $\boldsymbol{t}$
+-   相机中心点 $O_1$, $O_2$
+-   空间中 $P$ 点在 $I_1$ 中的投影点 $p_1$, 对应 $I_2$ 中的投影点 $p_2$, 两者通过特征匹配
+-   极平面 (Epipolar plane) $O_1O_2P$
+-   极点 (Epipoles) $e_1$, $e_2$
+-   极线 (Epipolar line) $l_1$, $l_2$
+
+-   基线 $O_1O_2$
+
+![image-20220714161605498](VSLAM14Chapter_note.assets/image-20220714161605498.png)
+
+-   几何关系
+
+    -    $P$ 的空间位置
+         $$
+         \boldsymbol{P} = [X,Y,Z]^{\text{T}}
+         $$
+
+    -    $\boldsymbol{p}_1$, $\boldsymbol{p}_2$ 像素位置
+
+         -   $\boldsymbol{K}$ 相机内参矩阵
+         -   $\boldsymbol{R}$, $\boldsymbol{t}$ 相机运动  
+
+         $$
+         s_{1} \boldsymbol{p}_{1}=\boldsymbol{K} \boldsymbol{P}, \quad s_{2} \boldsymbol{p}_{2}=\boldsymbol{K}(\boldsymbol{R} \boldsymbol{P}+\boldsymbol{t})
+         $$
+
+    -    尺度意义下相等的齐次坐标, 得到归一化平面上的坐标 $\boldsymbol{x}_1$, $\boldsymbol{x}_2$
+         $$
+         s \boldsymbol{p} \simeq \boldsymbol{p} 
+         
+         \\
+         
+         \boldsymbol{p}_{1} \simeq \boldsymbol{K} \boldsymbol{P}, \quad \boldsymbol{p}_{2} \simeq \boldsymbol{K}(\boldsymbol{R P}+\boldsymbol{t})
+         
+         \\
+         
+         \boldsymbol{x}_{1}=\boldsymbol{K}^{-1} \boldsymbol{p}_{1}, \quad \boldsymbol{x}_{2}=\boldsymbol{K}^{-1} \boldsymbol{p}_{2}
+         
+         \\
+         
+         \boldsymbol{x}_2 \simeq \boldsymbol{R} \boldsymbol{x}_1 + \boldsymbol{t}
+         
+         \\
+         
+         \boldsymbol{t}^{\wedge}\boldsymbol{x}_2 \simeq \boldsymbol{t}^{\wedge}\boldsymbol{R}\boldsymbol{x}_1
+         
+         \\
+         
+         \boldsymbol{x}_2^{\text{T}}\boldsymbol{t}^{\wedge}\boldsymbol{x}_2 \simeq \boldsymbol{x}_2^{\text{T}}\boldsymbol{t}^{\wedge}\boldsymbol{R}\boldsymbol{x}_1
+         $$
+
+    -    对极约束方程
+         $$
+         \boldsymbol{x}_2^{\text{T}}\boldsymbol{t}^{\wedge}\boldsymbol{R}\boldsymbol{x}_1 = 0
+         
+         \\
+         
+         \boldsymbol{p}_2^{\wedge}\boldsymbol{K}^{-\text{T}}\boldsymbol{t}^{\wedge}\boldsymbol{R}\boldsymbol{K}^{-1}\boldsymbol{p}_1 = 0
+         $$
+
+    -    基础矩阵 $\boldsymbol{F}$ 和本质矩阵 $\boldsymbol{E}$
+
+         -   本质矩阵 $\boldsymbol{E} = \boldsymbol{t}^{\wedge}\boldsymbol{R}$ 
+         -   基础矩阵 $\boldsymbol{F} = \boldsymbol{K}^{-\text{T}}\boldsymbol{E}\boldsymbol{K}^{-1}$ 
+         -   对极约束 $\boldsymbol{x}_2^{\text{T}}\boldsymbol{E}\boldsymbol{x}_1 = \boldsymbol{p}_2^{\text{T}}\boldsymbol{F}\boldsymbol{p}_1 = 0$
+
+    -    相机位置估计问题步骤
+
+         1.  根据配对点像素位置求出 $\boldsymbol{E}$ 或 $\boldsymbol{F}$
+             1.  八点法
+         2.  根据 $\boldsymbol{E}$ 或 $\boldsymbol{F}$ 求出 $\boldsymbol{R}$ , $\boldsymbol{t}$
+             1.  SVD求解
+
+
+
+
+#### 本质矩阵 Essential Matrix
+
+-   本质矩阵 $\boldsymbol{E} = \boldsymbol{t}^{\wedge}\boldsymbol{R} \in \R^{3x3}$
+
+-   本质矩阵性质
+    -   $\boldsymbol{E}$ 在不同尺度下等价, 即乘以任意非零常数, 对极约束仍然满足
+    -   $\boldsymbol{E}$ 的奇异值形式为 $[\sigma, \sigma, 0]^{\text{T}}$
+    -   $\boldsymbol{t}^{\wedge}\boldsymbol{R}$ 平移加旋转6个自由度, 但考虑尺度等价性, 实际是5个自由度, 表明最少五个点可以求解 $\boldsymbol{E}$, 但一般用**八点法**来求解. 
+
+-   八点法求解本质矩阵 $\boldsymbol{E}$
+
+    -   考虑一对匹配点, 归一化坐标为 $\boldsymbol{x}_{1}=\left[u_{1}, v_{1}, 1\right]^{\mathrm{T}}, \boldsymbol{x}_{2}=\left[u_{2}, v_{2}, 1\right]^{\mathrm{T}}$ 
+
+    -   根据对极约束
+        $$
+        \left(u_{2}, v_{2}, 1\right)\left(\begin{array}{ccc}
+        e_{1} & e_{2} & e_{3} \\
+        e_{4} & e_{5} & e_{6} \\
+        e_{7} & e_{8} & e_{9}
+        \end{array}\right)\left(\begin{array}{c}
+        u_{1} \\
+        v_{1} \\
+        1
+        \end{array}\right)=0
+        $$
+
+    -   把矩阵 $\boldsymbol{E}$ 展开为向量形式
+        $$
+        \boldsymbol{e}=\left[e_{1}, e_{2}, e_{3}, e_{4}, e_{5}, e_{6}, e_{7}, e_{8}, e_{9}\right]^{\mathrm{T}}
+        $$
+
+    -   对极约束写为关于 $\boldsymbol{e}$ 的线性形式
+        $$
+        \left[u_{2} u_{1}, u_{2} v_{1}, u_{2}, v_{2} u_{1}, v_{2} v_{1}, v_{2}, u_{1}, v_{1}, 1\right] \cdot \boldsymbol{e}=0
+        $$
+
+    -   加入其他点
+        $$
+        \left(\begin{array}{ccccccccc}
+        u_{2}^{1} u_{1}^{1} & u_{2}^{1} v_{1}^{1} & u_{2}^{1} & v_{2}^{1} u_{1}^{1} & v_{2}^{1} v_{1}^{1} & v_{2}^{1} & u_{1}^{1} & v_{1}^{1} & 1 \\
+        u_{2}^{2} u_{1}^{2} & u_{2}^{2} v_{1}^{2} & u_{2}^{2} & v_{2}^{2} u_{1}^{2} & v_{2}^{2} v_{1}^{2} & v_{2}^{2} & u_{1}^{2} & v_{1}^{2} & 1 \\
+        \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \\
+        u_{2}^{8} u_{1}^{8} & u_{2}^{8} v_{1}^{8} & u_{2}^{8} & v_{2}^{8} u_{1}^{8} & v_{2}^{8} v_{1}^{8} & v_{2}^{8} & u_{1}^{8} & v_{1}^{8} & 1
+        \end{array}\right)\left(\begin{array}{l}
+        e_{1} \\
+        e_{2} \\
+        e_{3} \\
+        e_{4} \\
+        e_{5} \\
+        e_{6} \\
+        e_{7} \\
+        e_{8} \\
+        e_{9}
+        \end{array}\right)=0
+        $$
+
+    -   8对匹配点组成的矩阵满足秩为8时, 能解得 $\boldsymbol{e}$ , 通过奇异值分解恢复出 $\boldsymbol{R}, \boldsymbol{t}$
+        $$
+        \boldsymbol{E}=\boldsymbol{U} \boldsymbol{\Sigma} \boldsymbol{V}^{\mathrm{T}}
+        $$
+
+    -   其中 $\boldsymbol{U}, \boldsymbol{V}$ 为正交阵, $\boldsymbol{\Sigma}$ 为奇异值矩阵。根据 $\boldsymbol{E}$ 的内在性质, 我们知道 $\boldsymbol{\Sigma}=\operatorname{diag}(\sigma, \sigma, 0)$ 。在 SVD 分解中, 对于任意一个 $E$, 存在四个可能的 $t, R$ 与它对应
+        $$
+        \begin{aligned}
+        \boldsymbol{t}_{1}^{\wedge} &=\boldsymbol{U} \boldsymbol{R}_{Z}\left(\frac{\pi}{2}\right) \boldsymbol{\Sigma} \boldsymbol{U}^{\mathrm{T}}, \quad \boldsymbol{R}_{1}=\boldsymbol{U} \boldsymbol{R}_{Z}^{\mathrm{T}}\left(\frac{\pi}{2}\right) \boldsymbol{V}^{\mathrm{T}} 
+        
+        \\
+        
+        \boldsymbol{t}_{2}^{\wedge} &=\boldsymbol{U} \boldsymbol{R}_{Z}\left(-\frac{\pi}{2}\right) \boldsymbol{\Sigma} \boldsymbol{U}^{\mathrm{T}}, \quad \boldsymbol{R}_{2}=\boldsymbol{U} \boldsymbol{R}_{Z}^{\mathrm{T}}\left(-\frac{\pi}{2}\right) \boldsymbol{V}^{\mathrm{T}}
+        
+        \\
+        
+        \boldsymbol{t}_3^{\wedge} &= -\boldsymbol{U} \boldsymbol{R}_{Z}\left(\frac{\pi}{2}\right) \boldsymbol{\Sigma} \boldsymbol{U}^{\mathrm{T}}
+        
+        \\ 
+        
+        \boldsymbol{t}_4^{\wedge} &= -\boldsymbol{U} \boldsymbol{R}_{Z}\left(-\frac{\pi}{2}\right) \boldsymbol{\Sigma} \boldsymbol{U}^{\mathrm{T}}
+        
+        \end{aligned}
+        $$
+        ![image-20220718093345417](VSLAM14Chapter_note.assets/image-20220718093345417.png)
+
+    -   只有第一种解中, $P$ 点的深度值在两个相机中都为正, 所以只有一个解
+
+    -   如果根据线性方程解出的 $\boldsymbol{E}$ 不满足其应有的内在性质, 即如果 $\boldsymbol{E}$ 的奇异值不为 $\sigma, \sigma, 0$ 的形式, 那么则对其奇异值矩阵 $\text{diag}(\sigma_1, \sigma_2, \sigma_3), \sigma_1 \geq \sigma_2 \geq \sigma_3$ 做如下处理
+        $$
+        \boldsymbol{E}=\boldsymbol{U} \operatorname{diag}\left(\frac{\sigma_{1}+\sigma_{2}}{2}, \frac{\sigma_{1}+\sigma_{2}}{2}, 0\right) \boldsymbol{V}^{\mathrm{T}}
+        $$
+
+    -   由于 $\boldsymbol{E}$ 具有尺度不变性, 所以直接设置为 $\text{diag}(1,1,0)$ 同样可行
+
+        
+
+
+
+#### 单应矩阵 Homography Matrix
+
+-   单应矩阵描述了两个平面之间的映射关系. 如果场景中的特征点在同一平面上, 则可以通过单应性进行运动估计
+
+-   假设图像 $\boldsymbol{I}_1$, $\boldsymbol{I}_2$ 有一对匹配好的特征点 $p_1, p_2$, 对应平面 $P$ 上, 该平面满足方程
+    $$
+    \boldsymbol{n}^{\text{T}}\boldsymbol{P} + d = 0
+    
+    \\
+    
+    \frac{\boldsymbol{n}^{\text{T}}\boldsymbol{P}}{d} = 1
+    $$
+
+-   代入 $\boldsymbol{p}_2$
+    $$
+    \begin{aligned}
+    \boldsymbol{p}_{2} & \simeq \boldsymbol{K}(\boldsymbol{R P}+\boldsymbol{t}) \\
+    & \simeq \boldsymbol{K}\left(\boldsymbol{R P}+\boldsymbol{t} \cdot\left(-\frac{\boldsymbol{n}^{\mathrm{T}} \boldsymbol{P}}{d}\right)\right) \\
+    & \simeq K\left(\boldsymbol{R}-\frac{\boldsymbol{t} \boldsymbol{n}^{\mathrm{T}}}{d}\right) \boldsymbol{P} \\
+    & \simeq \boldsymbol{K}\left(\boldsymbol{R}-\frac{\boldsymbol{t} \boldsymbol{n}^{\mathrm{T}}}{d}\right) \boldsymbol{K}^{-1} \boldsymbol{p}_{1}
+    \end{aligned}
+    $$
+    
+
+-   得到
+    $$
+    \boldsymbol{p}_2 \simeq \boldsymbol{H}\boldsymbol{p}_1
+    
+    \\
+    
+    \left(\begin{array}{c}
+    u_{2} \\
+    v_{2} \\
+    1
+    \end{array}\right) \simeq\left(\begin{array}{lll}
+    h_{1} & h_{2} & h_{3} \\
+    h_{4} & h_{5} & h_{6} \\
+    h_{7} & h_{8} & h_{9}
+    \end{array}\right)\left(\begin{array}{c}
+    u_{1} \\
+    v_{1} \\
+    1
+    \end{array}\right) .
+    $$
+
+-   自由度为8的单应矩阵可以通过4对不共线(三点不共线)的匹配特征点求解以下线性方程组
+    $$
+    \left(\begin{array}{cccccccc}
+    u_{1}^{1} & v_{1}^{1} & 1 & 0 & 0 & 0 & -u_{1}^{1} u_{2}^{1} & -v_{1}^{1} u_{2}^{1} \\
+    0 & 0 & 0 & u_{1}^{1} & v_{1}^{1} & 1 & -u_{1}^{1} v_{2}^{1} & -v_{1}^{1} v_{2}^{1} \\
+    u_{1}^{2} & v_{1}^{2} & 1 & 0 & 0 & 0 & -u_{1}^{2} u_{2}^{2} & -v_{1}^{2} u_{2}^{2} \\
+    0 & 0 & 0 & u_{1}^{2} & v_{1}^{2} & 1 & -u_{1}^{2} v_{2}^{2} & -v_{1}^{2} v_{2}^{2} \\
+    u_{1}^{3} & v_{1}^{3} & 1 & 0 & 0 & 0 & -u_{1}^{3} u_{2}^{3} & -v_{1}^{3} u_{2}^{3} \\
+    0 & 0 & 0 & u_{1}^{3} & v_{1}^{3} & 1 & -u_{1}^{3} v_{2}^{3} & -v_{1}^{3} v_{2}^{3} \\
+    u_{1}^{4} & v_{1}^{4} & 1 & 0 & 0 & 0 & -u_{1}^{4} u_{2}^{4} & -v_{1}^{4} u_{2}^{4} \\
+    0 & 0 & 0 & u_{1}^{4} & v_{1}^{4} & 1 & -u_{1}^{4} v_{2}^{4} & -v_{1}^{4} v_{2}^{4}
+    \end{array}\right)\left(\begin{array}{l}
+    h_{1} \\
+    h_{2} \\
+    h_{3} \\
+    h_{4} \\
+    h_{5} \\
+    h_{6} \\
+    h_{7} \\
+    h_{8}
+    \end{array}\right)=\left(\begin{array}{c}
+    u_{2}^{1} \\
+    v_{2}^{1} \\
+    u_{2}^{2} \\
+    v_{2}^{2} \\
+    u_{2}^{3} \\
+    v_{2}^{3} \\
+    u_{2}^{4} \\
+    v_{2}^{4}
+    \end{array}\right)
+    $$
+    
+
+-   求解单应矩阵同样需要分解得到 $\boldsymbol{R}, \boldsymbol{t}$, 同时通过判断正的深度值和已知平面法向量来得到最终运动估计
+-   当特征点共面或相机发生纯旋转时, 基础矩阵的自由度下降, 即退化现象, 噪声会对多余的自由度起到决定作用. 一般会同时估计基础矩阵 $\boldsymbol{F}$ 与 单应矩阵 $\boldsymbol{H}$, 选择重投影误差小的作为最终的运动估计矩阵
+
+
+
+
+
+### 实践: 对极约束求解相机运动
+
+#### 尺度不确定性
+
+-   对 $\boldsymbol{t}$ 的归一化导致了单目视觉的尺度不确定性
+-   单目SLAM需要初始化, 两张图像必须有平移, 之后的轨迹与地图都以此平移为单位
+
+#### 初始化的纯旋转问题
+
+-   如果相机发生纯旋转, 导致 $\boldsymbol{t}$ 为零, 那么 $\boldsymbol{E}$ 也为零, 无法求解 $\boldsymbol{R}$, 此时可以根据 $\boldsymbol{H}$ 求得旋转, 但仍然无法估计特征点的空间位置, 所以单目初始化不能只有纯旋转, 必须要有平移.
+
+#### 多于8点的情况
+
+-   通过最小二乘求解
+    $$
+    \boldsymbol{A} \boldsymbol{e} = 0
+    
+    \\
+    
+    \min _{\boldsymbol{e}}\|\boldsymbol{A} \boldsymbol{e}\|_{2}^{2}=\min _{\boldsymbol{e}} \boldsymbol{e}^{\mathrm{T}} \boldsymbol{A}^{\mathrm{T}} \boldsymbol{A} \boldsymbol{e} .
+    $$
+
+-   当可能存在误匹配时, 使用RANSAC (随机采样一致性, Random Sample Concensus) 求解
+
+
+
+
+
+### 三角测量
+
+![image-20220718105425966](VSLAM14Chapter_note.assets/image-20220718105425966.png)
+
+-   考虑图像 $I_{1}$ 和 $I_{2}$, 以左图为参考, 右图的变换矩阵为 $\boldsymbol{T}$ 。相机光心为 $O_{1}$ 和 $O_{2}$ 。在 $I_{1}$ 中有特征点 $p_{1}$, 对应 $I_{2}$ 中有特征点 $p_{2}$ 。理论上, 直线 $O_{1} p_{1}$ 与 $O_{2} p_{2}$ 在场景中会相交 于一点 $P$, 该点即两个特征点所对应的地图点在三维场景中的位置。然而由于噪声的影响, 这两条直线往往无法相交。因此, 可以通过最小二乘法求解。设 $\boldsymbol{x_1}, \boldsymbol{x_2}$ 为两个特征点的归一化坐标,
+    $$
+    s_{2} \boldsymbol{x}_{2}=s_{1} \boldsymbol{R} \boldsymbol{x}_{1}+\boldsymbol{t}
+    
+    \\
+    
+    s_{2} \boldsymbol{x}_{2}^{\wedge} \boldsymbol{x}_{2}=0=s_{1} \boldsymbol{x}_{2}^{\wedge} \boldsymbol{R} \boldsymbol{x}_{1}+\boldsymbol{x}_{2}^{\wedge} \boldsymbol{t}
+    $$
+
+    -   根据上式可以直接求解 $s_1$, $s_2$
+    -   由于噪声, 更常见通过最小二乘求解
+
+
+
+
+
+
+
+
+
