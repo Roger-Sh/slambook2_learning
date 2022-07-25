@@ -211,14 +211,14 @@ void pose_estimation_2d2d(std::vector<cv::KeyPoint> keypoints_1,
     cv::Point2d principal_point(325.1, 249.7); //相机光心, TUM dataset标定值
     double focal_length = 521;                 //相机焦距, TUM dataset标定值
     cv::Mat essential_matrix;
-    essential_matrix = findEssentialMat(points1, points2, focal_length, principal_point);
+    essential_matrix = cv::findEssentialMat(points1, points2, focal_length, principal_point);
     std::cout << "essential_matrix is " << std::endl
               << essential_matrix << std::endl;
 
     //-- 计算单应矩阵
     //-- 但是本例中场景不是平面，单应矩阵意义不大
     cv::Mat homography_matrix;
-    homography_matrix = findHomography(points1, points2, cv::RANSAC, 3);
+    homography_matrix = cv::findHomography(points1, points2, cv::RANSAC, 3);
     std::cout << "homography_matrix is " << std::endl
               << homography_matrix << std::endl;
 
