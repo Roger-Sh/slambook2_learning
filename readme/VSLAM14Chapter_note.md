@@ -1761,12 +1761,11 @@ ORB特征的组成
     \begin{aligned}
     \boldsymbol{p}_{2} & \simeq \boldsymbol{K}(\boldsymbol{R P}+\boldsymbol{t}) \\
     & \simeq \boldsymbol{K}\left(\boldsymbol{R P}+\boldsymbol{t} \cdot\left(-\frac{\boldsymbol{n}^{\mathrm{T}} \boldsymbol{P}}{d}\right)\right) \\
-    & \simeq K\left(\boldsymbol{R}-\frac{\boldsymbol{t} \boldsymbol{n}^{\mathrm{T}}}{d}\right) \boldsymbol{P} \\
+    & \simeq \boldsymbol{K}\left(\boldsymbol{R}-\frac{\boldsymbol{t} \boldsymbol{n}^{\mathrm{T}}}{d}\right) \boldsymbol{P} \\
     & \simeq \boldsymbol{K}\left(\boldsymbol{R}-\frac{\boldsymbol{t} \boldsymbol{n}^{\mathrm{T}}}{d}\right) \boldsymbol{K}^{-1} \boldsymbol{p}_{1}
     \end{aligned}
     $$
     
-
 -   得到
     $$
     \boldsymbol{p}_2 \simeq \boldsymbol{H}\boldsymbol{p}_1
@@ -1820,7 +1819,6 @@ ORB特征的组成
     \end{array}\right)
     $$
     
-
 -   求解单应矩阵同样需要分解得到 $\boldsymbol{R}, \boldsymbol{t}$, 同时通过判断正的深度值和已知平面法向量来得到最终运动估计
 -   当特征点共面或相机发生纯旋转时, 基础矩阵的自由度下降, 即退化现象, 噪声会对多余的自由度起到决定作用. 一般会同时估计基础矩阵 $\boldsymbol{F}$ 与 单应矩阵 $\boldsymbol{H}$, 选择重投影误差小的作为最终的运动估计矩阵
 
@@ -1847,9 +1845,9 @@ ORB特征的组成
     
     \\
     
-    \min _{\boldsymbol{e}}\|\boldsymbol{A} \boldsymbol{e}\|_{2}^{2}=\min _{\boldsymbol{e}} \boldsymbol{e}^{\mathrm{T}} \boldsymbol{A}^{\mathrm{T}} \boldsymbol{A} \boldsymbol{e} .
+    \min _{\boldsymbol{e}}\|\boldsymbol{A} \boldsymbol{e}\|_{2}^{2}=\min _{\boldsymbol{e}} \boldsymbol{e}^{\mathrm{T}} \boldsymbol{A}^{\mathrm{T}} \boldsymbol{A} \boldsymbol{e} .
     $$
-
+    
 -   当可能存在误匹配时, 使用RANSAC (随机采样一致性, Random Sample Concensus) 求解
 
 
@@ -1871,6 +1869,33 @@ ORB特征的组成
 
     -   根据上式可以直接求解 $s_1$, $s_2$
     -   由于噪声, 更常见通过最小二乘求解
+
+-   三角测量注意事项
+
+    -   三角测量需要平移, 纯旋转无法得到三角测量
+    -   平移量越大, 三角测量精度越高, 但会导致图像外观发生明显变化, 使得特征匹配变得困难, 称之为视差 (parallax) 问题
+    -   单目视觉中, 通过几帧之后有足够平移的数据进行三角化, 称为延迟三角化
+
+
+
+
+
+
+### 3D-2D: PnP法
+
+-   3D-2D PnP法 与 2D-2D 对极几何的比较 
+    -   2D-2D 需要八个点以上才能估计相机位姿变化, 且存在初始化, 纯旋转, 尺度等问题. 如果两个图中其中一张图的3D位置已知, 最少只需要三对点就可以估计相机运动. 特征点的3D位置可以通过三角化或RGB-D相机深度值确定. 所以在双目或RGB-D相机的视觉里程计中, 可以直接使用3D-2D 的 PnP法估计相机运动.
+
+-   PnP法的求解方法
+    -   三对点估计位置 P3P
+    -   直接线性变换 DLT
+    -   EPnP (Efficient PnP)
+    -   UPnP
+    -   光束法平差 Bundle Adjustment BA
+
+
+
+
 
 
 
