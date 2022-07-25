@@ -1826,7 +1826,7 @@ ORB特征的组成
 
 
 
-### 实践: 对极约束求解相机运动
+### 实践: 2D-2D 对极约束求解相机运动
 
 #### 尺度不确定性
 
@@ -1883,6 +1883,8 @@ ORB特征的组成
 
 ### 3D-2D: PnP法
 
+#### PnP法简介
+
 -   3D-2D PnP法 与 2D-2D 对极几何的比较 
     -   2D-2D 需要八个点以上才能估计相机位姿变化, 且存在初始化, 纯旋转, 尺度等问题. 如果两个图中其中一张图的3D位置已知, 最少只需要三对点就可以估计相机运动. 特征点的3D位置可以通过三角化或RGB-D相机深度值确定. 所以在双目或RGB-D相机的视觉里程计中, 可以直接使用3D-2D 的 PnP法估计相机运动.
 
@@ -1895,13 +1897,251 @@ ORB特征的组成
 
 
 
+#### 直接线性变换法 DLT
+
+-   问题: 已知一组3D点, 以及他们在相机中的投影位置, 求相机位姿
+
+-   考虑某个空间点 $P$, 它的齐次坐标为 $\boldsymbol{P}=(X, Y, Z, 1)^{\mathrm{T}}$ 。在图像 $I_{1}$ 中, 投影到特征点 $\boldsymbol{x}_{1}=$ $\left(u_{1}, v_{1}, 1\right)^{\mathrm{T}}$ (以归一化平面齐次坐标表示)。此时, 相机的位姿 $\boldsymbol{R}, \boldsymbol{t}$ 是末知的。与单应矩阵的求解类似, 我们定义增广矩阵 $[\boldsymbol{R} \mid \boldsymbol{t}]$ 为一个 $3 \times 4$ 的矩阵, 包含了旋转与平移信息, 我们将其展开形式列写如下:
+    $$
+    s\left(\begin{array}{c}
+    u_{1} \\
+    v_{1} \\
+    1
+    \end{array}\right)=\left(\begin{array}{cccc}
+    t_{1} & t_{2} & t_{3} & t_{4} \\
+    t_{5} & t_{6} & t_{7} & t_{8} \\
+    t_{9} & t_{10} & t_{11} & t_{12}
+    \end{array}\right)\left(\begin{array}{l}
+    X \\
+    Y \\
+    Z \\
+    1
+    \end{array}\right)
+    
+    \\
+    \\
+    
+    u_{1}=\frac{t_{1} X+t_{2} Y+t_{3} Z+t_{4}}{t_{9} X+t_{10} Y+t_{11} Z+t_{12}}, \quad v_{1}=\frac{t_{5} X+t_{6} Y+t_{7} Z+t_{8}}{t_{9} X+t_{10} Y+t_{11} Z+t_{12}}
+    
+    \\
+    \\
+    
+    \boldsymbol{t}_{1}=\left(t_{1}, t_{2}, t_{3}, t_{4}\right)^{\mathrm{T}}, \boldsymbol{t}_{2}=\left(t_{5}, t_{6}, t_{7}, t_{8}\right)^{\mathrm{T}}, \boldsymbol{t}_{3}=\left(t_{9}, t_{10}, t_{11}, t_{12}\right)^{\mathrm{T}}
+    
+    \\
+    \\
+    
+    \boldsymbol{t}_{1}^{\mathrm{T}} \boldsymbol{P}-\boldsymbol{t}_{3}^{\mathrm{T}} \boldsymbol{P} u_{1}=0,\quad \boldsymbol{t}_{2}^{\mathrm{T}} \boldsymbol{P}-\boldsymbol{t}_{3}^{\mathrm{T}} \boldsymbol{P} v_{1}=0
+    
+    \\
+    \\
+    
+    \left(\begin{array}{ccc}
+    \boldsymbol{P}_{1}^{\mathrm{T}} & 0 & -u_{1} \boldsymbol{P}_{1}^{\mathrm{T}} \\
+    0 & \boldsymbol{P}_{1}^{\mathrm{T}} & -v_{1} \boldsymbol{P}_{1}^{\mathrm{T}} \\
+    \vdots & \vdots & \vdots \\
+    \boldsymbol{P}_{N}^{\mathrm{T}} & 0 & -u_{N} \boldsymbol{P}_{N}^{\mathrm{T}} \\
+    0 & \boldsymbol{P}_{N}^{\mathrm{T}} & -v_{N} \boldsymbol{P}_{N}^{\mathrm{T}}
+    \end{array}\right)\left(\begin{array}{l}
+    \boldsymbol{t}_{1} \\
+    \boldsymbol{t}_{2} \\
+    \boldsymbol{t}_{3}
+    \end{array}\right)=0 .
+    $$
+
+-   $\boldsymbol{t}$ 一共12维, 最少通过6对匹配点实现矩阵 $\boldsymbol{T}$ 的线性求解, 称为直接线性转换DLT, 当匹配点大于6对时, 也可以使用SVD法对超定方程求最小二乘解
+
+-   DLT求解时没有考虑 $\boldsymbol{T}$ 中元素互相之间的联系. 对于其中的旋转矩阵 $\boldsymbol{R}$, 我们要找出一个最好的旋转矩阵对它近似, 通过QR分解完成, 或通过以下方法:
+    $$
+    \boldsymbol{R} \leftarrow\left(\boldsymbol{R} \boldsymbol{R}^{\mathrm{T}}\right)^{-\frac{1}{2}} \boldsymbol{R}
+    $$
+    
+
+####  P3P法
+
+-   P3P 示意图
+
+![image-20220725120713009](VSLAM14Chapter_note.assets/image-20220725120713009.png)
+
+-   推导
+
+$$
+\Delta O a b-\Delta O A B, \quad \Delta O b c-\Delta O B C, \quad \Delta O a c-\Delta O A C
+
+\\
+\\
+
+\begin{aligned}
+&O A^{2}+O B^{2}-2 O A \cdot O B \cdot \cos \langle a, b\rangle=A B^{2} \\
+&O B^{2}+O C^{2}-2 O B \cdot O C \cdot \cos \langle b, c\rangle=B C^{2} \\
+&O A^{2}+O C^{2}-2 O A \cdot O C \cdot \cos \langle a, c\rangle=A C^{2}
+\end{aligned}
+
+\\
+\\
+
+x=O A / O C, y=O B / O C
+
+\\
+\\
+
+\begin{aligned}
+&x^{2}+y^{2}-2 x y \cos \langle a, b\rangle=A B^{2} / O C^{2} \\
+&y^{2}+1^{2}-2 y \cos \langle b, c\rangle=B C^{2} / O C^{2} \\
+&x^{2}+1^{2}-2 x \cos \langle a, c\rangle=A C^{2} / O C^{2}
+\end{aligned}
+
+\\
+\\
+
+v=A B^{2} / O C^{2}, u v=B C^{2} / O C^{2}, w v=A C^{2} / O C^{2}
+
+\\
+\\
+
+\begin{aligned}
+&x^{2}+y^{2}-2 x y \cos \langle a, b\rangle-v=0 \\
+&y^{2}+1^{2}-2 y \cos \langle b, c\rangle-u v=0 \\
+&x^{2}+1^{2}-2 x \cos \langle a, c\rangle-w v=0
+\end{aligned}
+
+\\
+\\
+
+\begin{aligned}
+&(1-u) y^{2}-u x^{2}-\cos \langle b, c\rangle y+2 u x y \cos \langle a, b\rangle+1=0 \\
+&(1-w) x^{2}-w y^{2}-\cos \langle a, c\rangle x+2 w x y \cos \langle a, b\rangle+1=0
+\end{aligned}
+$$
+
+
+
+-   已知量
+    -   通过2D图像位置获取三个余弦角
+        -    $\cos{<a, b>},\cos{<b,c>},\cos{<a,c>}$
+    -   通过世界坐标系获取 $u, w$
+        -   $u=B C^{2} / A B^{2}, w=A C^{2} / A B^{2}$
+
+-   通过吴消元法获得P3P的解析解, 最多可能有4个解, 通过验证点来计算最可能的解
+-   缺点
+    -   P3P只能利用三个点的信息, 当配对点多于三组, 难以利用更多信息
+    -   3D 或 2D点受噪声影响或误匹配, 算法失效
+-   SLAM 中通过P3P/EPnP 估计相机位姿, 然后构建最小二乘优化问题进行优化, 即Bundle Adjustment
 
 
 
 
 
+#### 最小化重投影误差求解PnP (BA, Bundle Adjustment)
 
+-   把相机位姿和空间点的三维坐标放在一起进行最小化的问题, 统称为 Bundle Adjustment. 
 
+-   构建最小二乘问题, 寻找最好的相机位姿 $\boldsymbol{T}$
+    $$
+    s_{i}\left[\begin{array}{c}u_{i} \\ v_{i} \\ 1\end{array}\right]=\boldsymbol{K} \boldsymbol{T}\left[\begin{array}{c}X_{i} \\ Y_{i} \\ Z_{i} \\ 1\end{array}\right]
+    
+    \\
+    \\
+    
+    s_{i} \boldsymbol{u}_{i}=\boldsymbol{K} \boldsymbol{T} \boldsymbol{P}_{i}
+    
+    \\
+    \\
+    
+    \boldsymbol{T}^{*}=\arg \min _{\boldsymbol{T}} \frac{1}{2} \sum_{i=1}^{n}\left\|\boldsymbol{u}_{i}-\frac{1}{s_{i}} \boldsymbol{K} \boldsymbol{T} \boldsymbol{P}_{i}\right\|_{2}^{2}
+    $$
 
+-   误差项关于优化变量的导数
+    $$
+    \boldsymbol{e}(\boldsymbol{x}+\Delta \boldsymbol{x}) \approx \boldsymbol{e}(\boldsymbol{x}) + \boldsymbol{J}^{\mathrm{T}} \Delta \boldsymbol{x}
+    $$
 
+-   重投影误差项关于相机位姿李代数的导数 $\frac{\part \boldsymbol{e}}{\part{\delta \boldsymbol{\xi}}}$ 
+    $$
+    \boldsymbol{P}^{\prime}=(\boldsymbol{T} \boldsymbol{P})_{1: 3}=\left[X^{\prime}, Y^{\prime}, Z^{\prime}\right]^{\mathrm{T}}
+    
+    \\
+    \\
+    
+    \boldsymbol{s} \boldsymbol{u} = \boldsymbol{K} \boldsymbol{P}^{\prime}
+    
+    \\
+    \\
+    
+    \left[\begin{array}{l}
+    s u \\
+    s v \\
+    s
+    \end{array}\right]=\left[\begin{array}{ccc}
+    f_{x} & 0 & c_{x} \\
+    0 & f_{y} & c_{y} \\
+    0 & 0 & 1
+    \end{array}\right]\left[\begin{array}{l}
+    X^{\prime} \\
+    Y^{\prime} \\
+    Z^{\prime}
+    \end{array}\right]
+    
+    \\
+    \\
+    
+    u=f_{x} \frac{X^{\prime}}{Z^{\prime}}+c_{x}, \quad v=f_{y} \frac{Y^{\prime}}{Z^{\prime}}+c_{y} 
+    
+    \\
+    \\
+    
+    \frac{\partial \boldsymbol{e}}{\partial \delta \boldsymbol{\xi}}=\lim _{\delta \boldsymbol{\xi} \rightarrow 0} \frac{\boldsymbol{e}(\delta \boldsymbol{\xi} \oplus \boldsymbol{\xi})-\boldsymbol{e}(\boldsymbol{\xi})}{\delta \boldsymbol{\xi}}=\frac{\partial \boldsymbol{e}}{\partial \boldsymbol{P}^{\prime}} \frac{\partial \boldsymbol{P}^{\prime}}{\partial \delta \boldsymbol{\xi}}
+    
+    \\
+    \\
+    
+    \frac{\partial \boldsymbol{e}}{\partial \boldsymbol{P}^{\prime}}=-\left[\begin{array}{ccc}
+    \frac{\partial u}{\partial X^{\prime}} & \frac{\partial u}{\partial Y^{\prime}} & \frac{\partial u}{\partial Z^{\prime}} \\
+    \frac{\partial v}{\partial X^{\prime}} & \frac{\partial v}{\partial Y^{\prime}} & \frac{\partial v}{\partial Z^{\prime}}
+    \end{array}\right]=-\left[\begin{array}{ccc}
+    \frac{f_{x}}{Z^{\prime}} & 0 & -\frac{f_{x} X^{\prime}}{Z^{\prime 2}} \\
+    0 & \frac{f_{y}}{Z^{\prime}} & -\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}
+    \end{array}\right]
+    
+    \\
+    \\
+    
+    \frac{\partial(\boldsymbol{T} \boldsymbol{P})}{\partial \delta \boldsymbol{\xi}}=(\boldsymbol{T} \boldsymbol{P})^{\odot}=\left[\begin{array}{cc}
+    \boldsymbol{I} & -\boldsymbol{P}^{\prime \wedge} \\
+    \mathbf{0}^{\mathrm{T}} & \mathbf{0}^{\mathrm{T}}
+    \end{array}\right]
+    
+    \\
+    \\
+    
+    \frac{\partial \boldsymbol{P}^{\prime}}{\partial \delta \boldsymbol{\xi}}=\left[\boldsymbol{I},-\boldsymbol{P}^{\prime \wedge}\right]
+    
+    \\
+    \\
+    
+    \frac{\partial \boldsymbol{e}}{\partial \delta \boldsymbol{\xi}}=-\left[\begin{array}{cccccc}
+    \frac{f_{x}}{Z^{\prime}} & 0 & -\frac{f_{x} X^{\prime}}{Z^{\prime 2}} & -\frac{f_{x} X^{\prime} Y^{\prime}}{Z^{\prime 2}} & f_{x}+\frac{f_{x} X^{\prime 2}}{Z^{\prime 2}} & -\frac{f_{x} Y^{\prime}}{Z^{\prime}} \\
+    0 & \frac{f_{y}}{Z^{\prime}} & -\frac{f_{y} Y^{\prime}}{Z^{\prime 2}} & -f_{y}-\frac{f_{y} Y^{\prime 2}}{Z^{\prime 2}} & \frac{f_{y} X^{\prime} Y^{\prime}}{Z^{\prime 2}} & \frac{f_{y} X^{\prime}}{Z^{\prime}}
+    \end{array}\right] .
+    $$
 
+-   重投影误差项关于空间点 $\boldsymbol{P}$ 的导数 $\frac{\part{\boldsymbol{e}}}{\part \boldsymbol{P}}$ 
+    $$
+    \frac{\partial \boldsymbol{e}}{\partial \boldsymbol{P}}=\frac{\partial \boldsymbol{e}}{\partial \boldsymbol{P}^{\prime}} \frac{\partial \boldsymbol{P}^{\prime}}{\partial \boldsymbol{P}}
+    
+    \\
+    \\
+    
+    \boldsymbol{P}^{\prime}=(\boldsymbol{T} \boldsymbol{P})_{1: 3}=\boldsymbol{R} \boldsymbol{P}+\boldsymbol{t}
+    
+    \\
+    \\
+    
+    \frac{\partial \boldsymbol{e}}{\partial \boldsymbol{P}}=-\left[\begin{array}{ccc}
+    \frac{f_{x}}{Z^{\prime}} & 0 & -\frac{f_{x} X^{\prime}}{Z^{\prime 2}} \\
+    0 & \frac{f_{y}}{Z^{\prime}} & -\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}
+    \end{array}\right] \boldsymbol{R}
+    $$
+    
+
+### 实践: 求解3D-2D PnP
