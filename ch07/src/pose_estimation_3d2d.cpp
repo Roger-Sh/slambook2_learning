@@ -355,7 +355,7 @@ public:
     }
 
     // left multiplication on SE3
-    // update
+    // update SE3
     virtual void oplusImpl(const double *update) override
     {
         Eigen::Matrix<double, 6, 1> update_eigen;
@@ -379,6 +379,7 @@ public:
 
     EdgeProjection(const Eigen::Vector3d &pos, const Eigen::Matrix3d &K) : _pos3d(pos), _K(K) {}
 
+    // reprojection error
     virtual void computeError() override
     {
         const VertexPose *v = static_cast<VertexPose *>(_vertices[0]);
@@ -388,6 +389,7 @@ public:
         _error = _measurement - pos_pixel.head<2>();
     }
 
+    // jacobean matrix
     virtual void linearizeOplus() override
     {
         const VertexPose *v = static_cast<VertexPose *>(_vertices[0]);

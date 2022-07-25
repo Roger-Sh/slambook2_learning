@@ -2036,6 +2036,8 @@ $$
 
 -   把相机位姿和空间点的三维坐标放在一起进行最小化的问题, 统称为 Bundle Adjustment. 
 
+    ![image-20220725151506151](VSLAM14Chapter_note.assets/image-20220725151506151.png)
+
 -   构建最小二乘问题, 寻找最好的相机位姿 $\boldsymbol{T}$
     $$
     s_{i}\left[\begin{array}{c}u_{i} \\ v_{i} \\ 1\end{array}\right]=\boldsymbol{K} \boldsymbol{T}\left[\begin{array}{c}X_{i} \\ Y_{i} \\ Z_{i} \\ 1\end{array}\right]
@@ -2122,7 +2124,7 @@ $$
     \frac{\partial \boldsymbol{e}}{\partial \delta \boldsymbol{\xi}}=-\left[\begin{array}{cccccc}
     \frac{f_{x}}{Z^{\prime}} & 0 & -\frac{f_{x} X^{\prime}}{Z^{\prime 2}} & -\frac{f_{x} X^{\prime} Y^{\prime}}{Z^{\prime 2}} & f_{x}+\frac{f_{x} X^{\prime 2}}{Z^{\prime 2}} & -\frac{f_{x} Y^{\prime}}{Z^{\prime}} \\
     0 & \frac{f_{y}}{Z^{\prime}} & -\frac{f_{y} Y^{\prime}}{Z^{\prime 2}} & -f_{y}-\frac{f_{y} Y^{\prime 2}}{Z^{\prime 2}} & \frac{f_{y} X^{\prime} Y^{\prime}}{Z^{\prime 2}} & \frac{f_{y} X^{\prime}}{Z^{\prime}}
-    \end{array}\right] .
+    \end{array}\right]
     $$
 
 -   重投影误差项关于空间点 $\boldsymbol{P}$ 的导数 $\frac{\part{\boldsymbol{e}}}{\part \boldsymbol{P}}$ 
@@ -2145,3 +2147,152 @@ $$
     
 
 ### 实践: 求解3D-2D PnP
+
+#### 通过 OpenCV 求解EPnP
+
+#### 通过手写高斯牛顿法进行BA优化
+
+$$
+\boldsymbol{T}^{*}=\arg \min _{\boldsymbol{T}} \frac{1}{2} \sum_{i=1}^{n}\left\|\boldsymbol{u}_{i}-\frac{1}{s_{i}} \boldsymbol{K} \boldsymbol{T} \boldsymbol{P}_{i}\right\|_{2}^{2}
+
+\\
+\\
+
+\boldsymbol{e}(\boldsymbol{x}) = \sum_{i=1}^{n}\left\|\boldsymbol{u}_{i}-\frac{1}{s_{i}} \boldsymbol{K} \boldsymbol{T} \boldsymbol{P}_{i}\right\|_{2}^{2}
+
+\\
+\\
+
+\boldsymbol{e}(\boldsymbol{x}+\Delta \boldsymbol{x}) \approx \boldsymbol{e}(\boldsymbol{x})+\boldsymbol{J}^{\mathrm{T}} \Delta \boldsymbol{x}
+
+\\
+\\
+
+\boldsymbol{J}^{\text{T}} =  \frac{\partial \boldsymbol{e}}{\partial \delta \boldsymbol{\xi}}=-\left[\begin{array}{ccrrrr}
+\frac{f_{x}}{Z^{\prime}} & 0 & -\frac{f_{x} X^{\prime}}{Z^{\prime 2}} & -\frac{f_{x} X^{\prime} Y^{\prime}}{Z^{\prime 2}} & f_{x}+\frac{f_{x} X^{\prime 2}}{Z^{\prime 2}} & -\frac{f_{x} Y^{\prime}}{Z^{\prime}} \\
+0 & \frac{f_{y}}{Z^{\prime}} & -\frac{f_{y} Y^{\prime}}{Z^{\prime 2}} & -f_{y}-\frac{f_{y} Y^{\prime 2}}{Z^{\prime 2}} & \frac{f_{y} X^{\prime} Y^{\prime}}{Z^{\prime 2}} & \frac{f_{y} X^{\prime}}{Z^{\prime}}
+\end{array}\right] 
+
+\\
+\\
+
+\boldsymbol{J}\boldsymbol{J}^{\text{T}} \Delta \boldsymbol{x} = - \boldsymbol{J} \boldsymbol{e}(\boldsymbol{x})
+
+\\
+\\
+$$
+
+#### 通过G2O 进行BA优化
+
+-   顶点: 第二个相机的位姿节点 $\boldsymbol{T} \in \mathrm{SE}(3)$ 。需要实现顶点的更新
+2. 边: 每个 $3 \mathrm{D}$ 点在第二个相机中的投影, 以观测方程来描述如下. 需要实现边的误差计算和雅可比矩阵.
+
+$$
+\boldsymbol{z}_{j}=h\left(\boldsymbol{T}, \boldsymbol{P}_{j}\right) .
+$$
+
+![image-20220725155331447](VSLAM14Chapter_note.assets/image-20220725155331447.png)
+
+
+
+
+
+
+
+### 3D-3D: ICP法 (Iterative Closest Point)
+
+-   问题描述: 对一组匹配好的3D点寻找欧氏变换
+    $$
+    \forall i, \boldsymbol{p}_{i}=\boldsymbol{R} \boldsymbol{p}_{i}^{\prime}+\boldsymbol{t}
+    $$
+    
+
+
+
+#### SVD法求解ICP
+
+-   误差项
+    $$
+    \boldsymbol{e}_{i}=\boldsymbol{p}_{i}-\left(\boldsymbol{R} \boldsymbol{p}_{i}^{\prime}+\boldsymbol{t}\right)
+    $$
+
+-   构建关于 $\boldsymbol{R}$ 的最小二乘问题
+
+$$
+\min _{\boldsymbol{R}, \boldsymbol{t}} \frac{1}{2} \sum_{i=1}^{n}\left\|\left(\boldsymbol{p}_{i}-\left(\boldsymbol{\boldsymbol { R } _ { \boldsymbol { i } }}{ }^{\prime}+\boldsymbol{t}\right)\right)\right\|_{2}^{2}
+
+\\
+\\
+
+\boldsymbol{p}=\frac{1}{n} \sum_{i=1}^{n}\left(\boldsymbol{p}_{i}\right), \quad \boldsymbol{p}^{\prime}=\frac{1}{n} \sum_{i=1}^{n}\left(\boldsymbol{p}_{i}^{\prime}\right)
+
+\\
+\\
+
+\min _{\boldsymbol{R}, \boldsymbol{t}} J=\frac{1}{2} \sum_{i=1}^{n}\left\|\boldsymbol{p}_{i}-\boldsymbol{p}-\boldsymbol{R}\left(\boldsymbol{p}_{i}^{\prime}-\boldsymbol{p}^{\prime}\right)\right\|^{2}+\left\|\boldsymbol{p}-\boldsymbol{R} \boldsymbol{p}^{\prime}-\boldsymbol{t}\right\|^{2}
+
+\\
+\\
+
+\boldsymbol{q}_{i}=\boldsymbol{p}_{i}-\boldsymbol{p}, \quad \boldsymbol{q}_{i}^{\prime}=\boldsymbol{p}_{i}^{\prime}-\boldsymbol{p}^{\prime}
+
+\\
+\\
+
+\boldsymbol{R}^{*}=\arg \min _{\boldsymbol{R}} \frac{1}{2} \sum_{i=1}^{n}\left\|\boldsymbol{q}_{i}-\boldsymbol{R} \boldsymbol{q}_{i}^{\prime}\right\|^{2}
+
+\\
+\\
+
+\boldsymbol{t}^{*}=\boldsymbol{p}-\boldsymbol{R} \boldsymbol{p}^{\prime}
+
+\\
+\\
+
+\frac{1}{2} \sum_{i=1}^{n}\left\|\boldsymbol{q}_{i}-\boldsymbol{R} \boldsymbol{q}_{i}^{\prime}\right\|^{2}=\frac{1}{2} \sum_{i=1}^{n}\left(\boldsymbol{q}_{i}^{\mathrm{T}} \boldsymbol{q}_{i}+\boldsymbol{q}_{i}^{\prime \mathrm{T}} \boldsymbol{R}^{\mathrm{T}} \boldsymbol{R} \boldsymbol{q}_{i}^{\prime}-2 \boldsymbol{q}_{i}^{\mathrm{T}} \boldsymbol{R} \boldsymbol{q}_{i}^{\prime}\right)
+
+\\
+\\
+
+\sum_{i=1}^{n}-\boldsymbol{q}_{i}^{\mathrm{T}} \boldsymbol{R} \boldsymbol{q}_{i}^{\prime}=\sum_{i=1}^{n}-\operatorname{tr}\left(\boldsymbol{R} \boldsymbol{q}_{i}^{\prime} \boldsymbol{q}_{i}^{\mathrm{T}}\right)=-\operatorname{tr}\left(\boldsymbol{R} \sum_{i=1}^{n} \boldsymbol{q}_{i}^{\prime} \boldsymbol{q}_{i}^{\mathrm{T}}\right)
+$$
+
+-   通过SVD分解求解 $\boldsymbol{R}$
+    $$
+    \boldsymbol{W}=\sum_{i=1}^{n} \boldsymbol{q}_{i} \boldsymbol{q}_{i}^{\prime \mathrm{T}}
+    
+    \\
+    \\
+    
+    \boldsymbol{W}=\boldsymbol{U} \boldsymbol{\Sigma} \boldsymbol{V}^{\mathrm{T}}
+    
+    \\
+    \\
+    
+    \boldsymbol{R}=\boldsymbol{U} \boldsymbol{V}^{\mathrm{T}}
+    $$
+
+-   当 $\boldsymbol{R}$ 的行列式为负, 则取 $-\boldsymbol{R}$
+
+-   根据下式求 $\boldsymbol{t}$
+    $$
+    \boldsymbol{t}^{*}=\boldsymbol{p}-\boldsymbol{R} \boldsymbol{p}^{\prime}
+    $$
+    
+
+#### 非线性优化法求解ICP
+
+-   3D-3D的非线性优化问题类似3D-2D 求解PnP问题
+
+$$
+\min _{\boldsymbol{\xi}}=\frac{1}{2} \sum_{i=1}^{n}\left\|\left(\boldsymbol{p}_{i}-\exp \left(\boldsymbol{\xi}^{\wedge}\right) \boldsymbol{p}_{i}^{\prime}\right)\right\|_{2}^{2}
+
+\\
+\\
+
+\frac{\partial \boldsymbol{e}}{\partial \delta \boldsymbol{\xi}}=-\left(\exp \left(\boldsymbol{\xi}^{\wedge}\right) \boldsymbol{p}_{i}^{\prime}\right)^{\odot}
+$$
+
+
+
+-   当深度已知时, 建模3D-3D误差, 当深度未知时, 建模3D-2D误差, 从而将3D-3D 与 3D-2D放在同一个优化问题中解决
