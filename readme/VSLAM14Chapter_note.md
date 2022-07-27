@@ -2150,7 +2150,7 @@ $$
 
 #### 通过 OpenCV 求解EPnP
 
-#### 通过手写高斯牛顿法进行BA优化
+#### 通过手写高斯牛顿法进行BA非线性优化
 
 $$
 \boldsymbol{T}^{*}=\arg \min _{\boldsymbol{T}} \frac{1}{2} \sum_{i=1}^{n}\left\|\boldsymbol{u}_{i}-\frac{1}{s_{i}} \boldsymbol{K} \boldsymbol{T} \boldsymbol{P}_{i}\right\|_{2}^{2}
@@ -2182,7 +2182,7 @@ $$
 \\
 $$
 
-#### 通过G2O 进行BA优化
+#### 通过G2O 进行BA非线性优化
 
 -   顶点: 第二个相机的位姿节点 $\boldsymbol{T} \in \mathrm{SE}(3)$ 。需要实现顶点的更新
 2. 边: 每个 $3 \mathrm{D}$ 点在第二个相机中的投影, 以观测方程来描述如下. 需要实现边的误差计算和雅可比矩阵.
@@ -2280,7 +2280,7 @@ $$
     $$
     
 
-#### 非线性优化法求解ICP
+#### BA非线性优化法求解ICP
 
 -   3D-3D的非线性优化问题类似3D-2D 求解PnP问题
 
