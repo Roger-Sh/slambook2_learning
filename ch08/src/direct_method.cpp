@@ -12,9 +12,9 @@ double fx = 718.856, fy = 718.856, cx = 607.1928, cy = 185.2157;
 // baseline
 double baseline = 0.573;
 // paths
-string left_file = "./left.png";
-string disparity_file = "./disparity.png";
-boost::format fmt_others("./%06d.png");    // other files
+string left_file = "../data/left.png";
+string disparity_file = "../data/disparity.png";
+boost::format fmt_others("../data/%06d.png");    // other files
 
 // useful typedefs
 typedef Eigen::Matrix<double, 6, 6> Matrix6d;
@@ -215,7 +215,7 @@ void DirectPoseEstimationSingleLayer(
         }
     }
     cv::imshow("current", img2_show);
-    cv::waitKey();
+    cv::waitKey(0);
 }
 
 void JacobianAccumulator::accumulate_jacobian(const cv::Range &range) {

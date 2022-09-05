@@ -397,7 +397,7 @@ $$
 
 ## 第四讲 - 李群与李代数
 
-### 李群与李代数基础
+### 4.1 李群与李代数基础
 
 #### 李群
 
@@ -556,7 +556,7 @@ $$
    \left[\boldsymbol{\xi}_{1}, \boldsymbol{\xi}_{2}\right]=\left(\boldsymbol{\xi}_{1}^{\wedge} \boldsymbol{\xi}_{2}^{\wedge}-\boldsymbol{\xi}_{2}^{\wedge} \boldsymbol{\xi}_{1}^{\wedge}\right)^{\vee}
    $$
 
-### 指数与对数映射
+### 4.2 指数与对数映射
 
 #### $\mathfrak{s o}(3)$ 指数映射与对数映射
 
@@ -665,7 +665,7 @@ $$
 
 
 
-### 李代数求导与扰动模型
+### 4.3 李代数求导与扰动模型
 
 #### BCH近似
 
@@ -751,7 +751,7 @@ $$
 $$
 
 
-### 评估轨迹误差
+### 4.4 评估轨迹误差
 
 -   绝对误差  (ATE, Absolute Trajectory Error)
 
@@ -781,7 +781,7 @@ $$
 
 
 
-### 相似变换群 $\text{Sim}(3)$ 与李代数
+### 4.5 相似变换群 $\text{Sim}(3)$ 与李代数
 
 -   相似变换
     $$
@@ -956,7 +956,7 @@ $$
 
 ## 第六讲 - 非线性优化
 
-### 状态估计问题
+### 6.1 状态估计问题
 
 #### 批量状态估计与最大后验估计
 
@@ -1196,7 +1196,7 @@ $$
 
 
 
-### 非线性最小二乘
+### 6.2 非线性最小二乘
 
 #### 简单的最小二乘问题
 
@@ -1360,7 +1360,7 @@ $$
 
 
 
-### 实践 - 曲线拟合问题
+### 6.3 实践 - 曲线拟合问题
 
 #### 手写高斯牛顿法
 
@@ -1472,7 +1472,7 @@ $$
 
 ## 第七讲 - 视觉里程计 1
 
-### 特征点法 (以ORB特征为例)
+### 7.1 特征点法 (以ORB特征为例)
 
 #### 特征点
 
@@ -1566,7 +1566,7 @@ ORB特征的组成
 
 
 
-### 2D-2D 对极几何
+### 7.2 2D-2D 对极几何
 
 #### 对极约束
 
@@ -1826,7 +1826,7 @@ ORB特征的组成
 
 
 
-### 实践: 2D-2D 对极约束求解相机运动
+### 7.3 实践: 2D-2D 对极约束求解相机运动
 
 #### 尺度不确定性
 
@@ -1854,7 +1854,7 @@ ORB特征的组成
 
 
 
-### 三角测量
+### 7.4 三角测量
 
 ![image-20220718105425966](VSLAM14Chapter_note.assets/image-20220718105425966.png)
 
@@ -1881,7 +1881,7 @@ ORB特征的组成
 
 
 
-### 3D-2D: PnP法
+### 7.5 3D-2D: PnP法
 
 #### PnP法简介
 
@@ -2146,7 +2146,7 @@ $$
     $$
     
 
-### 实践: 求解3D-2D PnP
+### 7.6 实践: 求解3D-2D PnP
 
 #### 通过 OpenCV 求解EPnP
 
@@ -2199,7 +2199,7 @@ $$
 
 
 
-### 3D-3D: ICP法 (Iterative Closest Point)
+### 7.7 3D-3D: ICP法 (Iterative Closest Point)
 
 -   问题描述: 对一组匹配好的3D点寻找欧氏变换
     $$
@@ -2296,4 +2296,175 @@ $$
 
 
 -   当深度已知时, 建模3D-3D误差, 当深度未知时, 建模3D-2D误差, 从而将3D-3D 与 3D-2D放在同一个优化问题中解决
+
+
+
+## 第八讲 - 视觉里程计2
+
+### 8.1 直接法的引出
+
+##### 特征点法的缺点
+
+-   关键点, 描述子计算耗时
+-   只用特征点抛弃了大量可能有用的图像信息
+-   特征缺失时无法找到足够匹配点计算相机运动
+
+
+
+##### 克服特征点缺陷的思路
+
+-   保留关键点, 不计算描述子, 使用**光流法**跟踪特征点
+    -   仍然通过**最小化重投影误差**(Reporjection error)优化相机运动
+    -   仍然需要计算关键点与光流特征
+-   保留关键点, 不计算描述子, 使用**直接法**预测下一帧特征点位置
+    -   不需要点对点的对应关系, 通过**最小化光度误差**(Photometric error)求得相机运动
+    -   根据图像的像素灰度信息同时估计相机运动和点的投影
+    -   避免了特征计算时间和特征缺失的情况
+    -   直接法可以进行稀疏, 稠密, 半稠密的地图构建
+
+
+
+### 8.2 2D光流
+
+##### 光流介绍
+
+-   描述像素随时间在图像间运动的方法
+    -   稀疏光流: 计算部分像素
+        -   Lucas-Kanade (LK) 光流
+    -   稠密光流: 计算所有像素
+        -   Horn-Schunck (HS) 光流
+
+
+
+##### Lucas-Kanade 光流
+
+![image-20220905142349180](VSLAM14Chapter_note.assets/image-20220905142349180.png)
+
+
+
+-   图像中的像素可以看作关于时间的函数 $I(x,y,t)$
+
+-   灰度不变假设: 同一空间点像素灰度在各个图像中固定不变
+    $$
+    \boldsymbol{I}(x+\mathrm{d} x, y+\mathrm{d} y, t+\mathrm{d} t)=\boldsymbol{I}(x, y, t)
+    $$
+    
+
+-   泰勒展开保留一阶项
+    $$
+    \boldsymbol{I}(x+\mathrm{d} x, y+\mathrm{d} y, t+\mathrm{d} t) \approx \boldsymbol{I}(x, y, t)+\frac{\partial \boldsymbol{I}}{\partial x} \mathrm{d} x+\frac{\partial \boldsymbol{I}}{\partial y} \mathrm{d} y+\frac{\partial \boldsymbol{I}}{\partial t} \mathrm{d} t 
+    
+    \\
+    \\
+    
+    \frac{\partial \boldsymbol{I}}{\partial x} \mathrm{d} x+\frac{\partial \boldsymbol{I}}{\partial y} \mathrm{d} y+\frac{\partial \boldsymbol{I}}{\partial t} \mathrm{d} t=0 
+    
+    \\
+    \\
+    
+    
+    \frac{\partial \boldsymbol{I}}{\partial x} \frac{\mathrm{d} x}{\mathrm{d} t}+\frac{\partial \boldsymbol{I}}{\partial y} \frac{\mathrm{d} y}{\mathrm{d} t}=-\frac{\partial \boldsymbol{I}}{\partial t}
+    
+    \\
+    \\
+    
+    \begin{align}
+    \mathrm{像素在x轴上的速度}&: u = \frac{\mathrm{d}x}{\mathrm{d}t} \\ 
+    \mathrm{像素在y轴上的速度}&: v = \frac{\mathrm{d}y}{\mathrm{d}t} \\
+    \mathrm{像素在该点处x方向的梯度}&: \boldsymbol{I}_x = \frac{\part \boldsymbol{I}}{\part x} \\
+    \mathrm{像素在该点处y方向的梯度}&: \boldsymbol{I}_y = \frac{\part \boldsymbol{I}}{\part y}
+    \end{align}
+    
+    \\
+    \\
+    
+    \left[\begin{array}{ll}
+    \boldsymbol{I}_x & \boldsymbol{I}_y
+    \end{array}\right]\left[\begin{array}{l}
+    u \\
+    v
+    \end{array}\right]=-\boldsymbol{I}_t
+    $$
+
+-   假设某个窗口内的像素具有相同的运动, 大小为 w x w, 像素数量为 $w^2$
+    $$
+    \left[\begin{array}{ll}
+    \boldsymbol{I}_x & \boldsymbol{I}_y
+    \end{array}\right]_k\left[\begin{array}{c}
+    u \\
+    v
+    \end{array}\right]=-\boldsymbol{I}_{t k}, \quad k=1, \ldots, w^2
+    
+    \\
+    \\
+    
+    \boldsymbol{A}=\left[\begin{array}{c}
+    {\left[\boldsymbol{I}_x, \boldsymbol{I}_y\right]_1} \\
+    \vdots \\
+    {\left[\boldsymbol{I}_x, \boldsymbol{I}_y\right]_k}
+    \end{array}\right], \boldsymbol{b}=\left[\begin{array}{c}
+    \boldsymbol{I}_{t 1} \\
+    \vdots \\
+    \boldsymbol{I}_{t k}
+    \end{array}\right]
+    
+    \\
+    \\
+    
+    \boldsymbol{A}\left[\begin{array}{l}
+    u \\
+    v
+    \end{array}\right]=-\boldsymbol{b}
+    $$
+
+-   利用最小二乘求解超定线性方程得到像素在图像间的移动速度 $u, v$ :
+    $$
+    \left[\begin{array}{l}
+    u \\
+    v
+    \end{array}\right]^*=-\left(\boldsymbol{A}^{\mathrm{T}} \boldsymbol{A}\right)^{-1} \boldsymbol{A}^{\mathrm{T}} \boldsymbol{b}
+    $$
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
