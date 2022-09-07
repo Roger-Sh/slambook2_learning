@@ -376,7 +376,7 @@ void OpticalFlowTracker::calculateOpticalFlow(const cv::Range &range)
             // check inverse formulation
             if (inverse == false)
             {
-                H = Eigen::Matrix2d::Zero();
+                H = Eigen::Matrix2d::Zero(); 
                 b = Eigen::Vector2d::Zero();
             }
             else

@@ -2349,7 +2349,6 @@ $$
     \boldsymbol{I}(x+\mathrm{d} x, y+\mathrm{d} y, t+\mathrm{d} t)=\boldsymbol{I}(x, y, t)
     $$
     
-
 -   泰勒展开保留一阶项
     $$
     \boldsymbol{I}(x+\mathrm{d} x, y+\mathrm{d} y, t+\mathrm{d} t) \approx \boldsymbol{I}(x, y, t)+\frac{\partial \boldsymbol{I}}{\partial x} \mathrm{d} x+\frac{\partial \boldsymbol{I}}{\partial y} \mathrm{d} y+\frac{\partial \boldsymbol{I}}{\partial t} \mathrm{d} t 
@@ -2414,23 +2413,77 @@ $$
     \boldsymbol{A}\left[\begin{array}{l}
     u \\
     v
-    \end{array}\right]=-\boldsymbol{b}
+    \end{array}\right]=-\boldsymbol{b}
     $$
-
+    
 -   利用最小二乘求解超定线性方程得到像素在图像间的移动速度 $u, v$ :
     $$
     \left[\begin{array}{l}
     u \\
     v
-    \end{array}\right]^*=-\left(\boldsymbol{A}^{\mathrm{T}} \boldsymbol{A}\right)^{-1} \boldsymbol{A}^{\mathrm{T}} \boldsymbol{b}
+    \end{array}\right]^* = 
+    
+    -\left(\boldsymbol{A}^{\mathrm{T}} \boldsymbol{A}\right)^{-1} \boldsymbol{A}^{\mathrm{T}} \boldsymbol{b}
     $$
     
 
+### 8.3 实践 LK光流
 
+-   OpenCV 调用 cv::calcOpticalFlowPyrLK
 
+-   高斯牛顿法
 
+    -   $$
+        \min _{\Delta x, \Delta y}\left\|\boldsymbol{I}_1(x, y)-\boldsymbol{I}_2(x+\Delta x, y+\Delta y)\right\|_2^2
+        
+        \\
+        \\
+        
+        
+        残差: 
+        
+        E = \boldsymbol{I}_1(x, y)-\boldsymbol{I}_2(x+\Delta x, y+\Delta y)
+        
+        \\
+        \\
+        
+        雅可比:
+        
+        J = -\frac{1}{2} 
+        \left[\begin{array}{l}
+        \left( \boldsymbol{I}_2(x+\Delta x + 1, y + \Delta y) -  \boldsymbol{I}_2(x+\Delta x - 1, y + \Delta y) \right) \\
+         \boldsymbol{I}_2(x+\Delta x, y + \Delta y + 1) -  \boldsymbol{I}_2(x+\Delta x, y + \Delta y - 1)
+        \end{array}\right]
+        
+        \\
+        \\
+        
+        B = -EJ
+        
+        \\
+        
+        H = JJ^{\mathrm{T}}
+        
+        \\
+        \\
+        
+        求解: H\Delta X = B
+        
+        $$
 
+        
 
+    -   单层
+
+        -   如果相机运动较快, 两帧图像差异明显, 单层图像光流法容易局部最小, 可以引入图像多层金字塔解决
+
+    -   多层
+
+        -   由粗至精 (Coarse-to-fine)
+
+        -   当原始图像像素运动较大时, 从顶层看运动仍然在一个较小的范围内
+
+            ![image-20220907182550586](VSLAM14Chapter_note.assets/image-20220907182550586.png)
 
 
 
