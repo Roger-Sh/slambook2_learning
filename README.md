@@ -1,4 +1,15 @@
-## Slambook2
+## Slambook2_learning
+
+## Intro
+
+本 Repo 用于自学 Slambook2
+
+
+
+## Info about SLAMBOOK2
+
+
+
 ![titlepage](./figures/title.png)
 
 Welcome to Slambook 2nd Edition! This is the codebase of our book. Here are some relavant links if you need them: 
@@ -29,3 +40,70 @@ BaiduYun backup link in case your github is very slow (common in China): [here](
 希望您喜欢本书。
 
 本代码的百度云备份（如果您的github速度非常慢）[下载链接](https://pan.baidu.com/s/1XQwpnDb3BOvxXZhL-03p3w).
+
+
+
+## Dependencies
+
+-   3rdparty/ceres-solver
+
+    ```bash
+    mkdir build
+    cd build
+    cmake -D CMAKE_INSTALL_PREFIX=./installed ..
+    make -j8
+    make install
+    ```
+
+-   3rdparty/DBow3
+
+    ```bash
+    mkdir build
+    cd build
+    cmake -D CMAKE_INSTALL_PREFIX=./installed ..
+    make -j8
+    make install
+    ```
+
+-   3rdparty/g2o
+
+    ```bash
+    mkdir build
+    cd build
+    cmake -D CMAKE_INSTALL_PREFIX=./installed ..
+    make -j8
+    make install
+    ```
+
+-   3rdparty/googletest
+
+    ```bash
+    mkdir build
+    cd build
+    cmake -D CMAKE_INSTALL_PREFIX=./installed ..
+    make -j8
+    make install
+    ```
+
+-   3rdparty/Pangolin
+
+    ```bash
+    mkdir build
+    cd build
+    cmake -D CMAKE_INSTALL_PREFIX=./installed ..
+    make -j8
+    make install
+    ```
+
+-   3rdparty/sophus
+
+    ```bash
+    mkdir build
+    cd build
+    cmake -D CMAKE_INSTALL_PREFIX=./installed ..
+    make -j8
+    make install
+    ```
+
+    
+

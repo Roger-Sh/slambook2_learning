@@ -1,6 +1,7 @@
 #include <pangolin/pangolin.h>
-#include <Eigen/Core>
 #include <unistd.h>
+
+#include <Eigen/Core>
 
 // 本例演示了如何画出一个预先存储的轨迹
 
@@ -8,7 +9,7 @@ using namespace std;
 using namespace Eigen;
 
 // path to trajectory file
-string trajectory_file = "../trajectory.txt";
+string trajectory_file = "../../../../chapter_demo/ch03/examples/trajectory.txt";
 
 void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>>);
 
@@ -56,9 +57,7 @@ void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> pos
     pangolin::OpenGlRenderState s_cam(
         pangolin::ProjectionMatrix(1024, 768, 500, 500, 512, 389, 0.1, 1000),
         pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0));
-    pangolin::View &d_cam = pangolin::CreateDisplay()
-                                .SetBounds(0.0, 1.0, 0.0, 1.0, -1024.0f / 768.0f)
-                                .SetHandler(new pangolin::Handler3D(s_cam));
+    pangolin::View &d_cam = pangolin::CreateDisplay().SetBounds(0.0, 1.0, 0.0, 1.0, -1024.0f / 768.0f).SetHandler(new pangolin::Handler3D(s_cam));
 
     // draw poses
     while (pangolin::ShouldQuit() == false)
@@ -100,6 +99,6 @@ void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> pos
         }
 
         pangolin::FinishFrame();
-        usleep(5000); // sleep 5 ms
+        usleep(5000);  // sleep 5 ms
     }
 }

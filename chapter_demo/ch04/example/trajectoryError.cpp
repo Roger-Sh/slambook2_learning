@@ -1,15 +1,16 @@
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
 #include <pangolin/pangolin.h>
+#include <unistd.h>
+
+#include <fstream>
+#include <iostream>
 #include <sophus/se3.hpp>
 
 // using namespace Sophus;
 // using namespace std;
 
 // trajectory file path
-std::string groundtruth_file = "../../example/groundtruth.txt";
-std::string estimated_file = "../../example/estimated.txt";
+std::string groundtruth_file = "../../../../chapter_demo/ch04/example/groundtruth.txt";
+std::string estimated_file = "../../../../chapter_demo/ch04/example/estimated.txt";
 
 // TrajectoryType
 typedef std::vector<Sophus::SE3d, Eigen::aligned_allocator<Sophus::SE3d>> TrajectoryType;
@@ -29,7 +30,7 @@ int main(int argc, char **argv)
     assert(!groundtruth.empty() && !estimated.empty());
     assert(groundtruth.size() == estimated.size());
 
-    // compute rmse 
+    // compute rmse
     double rmse = 0;
     for (size_t i = 0; i < estimated.size(); i++)
     {
@@ -47,9 +48,9 @@ int main(int argc, char **argv)
 
 /**
  * @brief read trajectory from file
- * 
- * @param path 
- * @return TrajectoryType 
+ *
+ * @param path
+ * @return TrajectoryType
  */
 TrajectoryType ReadTrajectory(const std::string &path)
 {
@@ -73,9 +74,9 @@ TrajectoryType ReadTrajectory(const std::string &path)
 
 /**
  * @brief draw trajectory using pangolin
- * 
- * @param gt 
- * @param esti 
+ *
+ * @param gt
+ * @param esti
  */
 void DrawTrajectory(const TrajectoryType &gt, const TrajectoryType &esti)
 {
@@ -91,9 +92,8 @@ void DrawTrajectory(const TrajectoryType &gt, const TrajectoryType &esti)
         pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0));
 
     // pangolin d_cam
-    pangolin::View &d_cam = pangolin::CreateDisplay()
-                                .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f / 768.0f)
-                                .SetHandler(new pangolin::Handler3D(s_cam));
+    pangolin::View &d_cam =
+        pangolin::CreateDisplay().SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f / 768.0f).SetHandler(new pangolin::Handler3D(s_cam));
 
     // draw trajectory
     while (pangolin::ShouldQuit() == false)
@@ -107,7 +107,7 @@ void DrawTrajectory(const TrajectoryType &gt, const TrajectoryType &esti)
         for (size_t i = 0; i < gt.size() - 1; i++)
         {
             // blue for ground truth
-            glColor3f(0.0f, 0.0f, 1.0f); 
+            glColor3f(0.0f, 0.0f, 1.0f);
             glBegin(GL_LINES);
             auto p1 = gt[i], p2 = gt[i + 1];
             glVertex3d(p1.translation()[0], p1.translation()[1], p1.translation()[2]);
@@ -119,7 +119,7 @@ void DrawTrajectory(const TrajectoryType &gt, const TrajectoryType &esti)
         for (size_t i = 0; i < esti.size() - 1; i++)
         {
             // red for estimated
-            glColor3f(1.0f, 0.0f, 0.0f); 
+            glColor3f(1.0f, 0.0f, 0.0f);
             glBegin(GL_LINES);
             auto p1 = esti[i], p2 = esti[i + 1];
             glVertex3d(p1.translation()[0], p1.translation()[1], p1.translation()[2]);
@@ -128,6 +128,6 @@ void DrawTrajectory(const TrajectoryType &gt, const TrajectoryType &esti)
         }
 
         pangolin::FinishFrame();
-        usleep(5000); // sleep 5 ms
+        usleep(5000);  // sleep 5 ms
     }
 }

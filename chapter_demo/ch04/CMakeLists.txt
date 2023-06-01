@@ -4,7 +4,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Sophus
-set(Sophus_DIR "${PROJECT_SOURCE_DIR}/../3rdparty/Sophus/build/installed")
+set(Sophus_DIR "${PROJECT_SOURCE_DIR}/../../3rdparty/Sophus/build/installed")
 find_package(Sophus REQUIRED)
 
 # Eigen

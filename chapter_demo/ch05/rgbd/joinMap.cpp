@@ -1,8 +1,9 @@
-#include <iostream>
-#include <fstream>
-#include <opencv2/opencv.hpp>
-#include <boost/format.hpp> // for formating strings
 #include <pangolin/pangolin.h>
+
+#include <boost/format.hpp>  // for formating strings
+#include <fstream>
+#include <iostream>
+#include <opencv2/opencv.hpp>
 #include <sophus/se3.hpp>
 
 // 轨迹类型
@@ -10,8 +11,7 @@ typedef std::vector<Sophus::SE3d, Eigen::aligned_allocator<Sophus::SE3d>> Trajec
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
 
 // 在pangolin中画图，已写好，无需调整
-void showPointCloud(
-    const std::vector<Vector6d, Eigen::aligned_allocator<Vector6d>> &pointcloud);
+void showPointCloud(const std::vector<Vector6d, Eigen::aligned_allocator<Vector6d>> &pointcloud);
 
 /**
  * @brief main
@@ -23,11 +23,11 @@ void showPointCloud(
 int main(int argc, char **argv)
 {
     // init
-    std::vector<cv::Mat> colorImgs, depthImgs; // 彩色图和深度图
-    TrajectoryType poses;                      // 相机位姿
+    std::vector<cv::Mat> colorImgs, depthImgs;  // 彩色图和深度图
+    TrajectoryType poses;                       // 相机位姿
 
     // check fin
-    std::ifstream fin("../../rgbd/pose.txt");
+    std::ifstream fin("../../../../chapter_demo/ch05/rgbd/pose.txt");
     if (!fin)
     {
         std::cerr << "请在有pose.txt的目录下运行此程序" << std::endl;
@@ -37,9 +37,9 @@ int main(int argc, char **argv)
     // read image and pose
     for (int i = 0; i < 5; i++)
     {
-        boost::format fmt("../../rgbd/%s/%d.%s"); //图像文件格式
+        boost::format fmt("../../../../chapter_demo/ch05/rgbd/%s/%d.%s");  // 图像文件格式
         colorImgs.push_back(cv::imread((fmt % "color" % (i + 1) % "png").str()));
-        depthImgs.push_back(cv::imread((fmt % "depth" % (i + 1) % "pgm").str(), -1)); // 使用-1读取原始图像
+        depthImgs.push_back(cv::imread((fmt % "depth" % (i + 1) % "pgm").str(), -1));  // 使用-1读取原始图像
 
         double data[7] = {0};
         for (auto &d : data)
@@ -47,8 +47,7 @@ int main(int argc, char **argv)
             fin >> d;
         }
 
-        Sophus::SE3d pose(Eigen::Quaterniond(data[6], data[3], data[4], data[5]),
-                          Eigen::Vector3d(data[0], data[1], data[2]));
+        Sophus::SE3d pose(Eigen::Quaterniond(data[6], data[3], data[4], data[5]), Eigen::Vector3d(data[0], data[1], data[2]));
         poses.push_back(pose);
     }
 
@@ -73,12 +72,12 @@ int main(int argc, char **argv)
         for (int v = 0; v < color.rows; v++)
             for (int u = 0; u < color.cols; u++)
             {
-                unsigned int d = depth.ptr<unsigned short>(v)[u]; // 深度值
+                unsigned int d = depth.ptr<unsigned short>(v)[u];  // 深度值
 
                 // 为0表示没有测量到
                 if (d == 0)
                 {
-                    continue;                     
+                    continue;
                 }
 
                 // 计算相机坐标
@@ -92,9 +91,9 @@ int main(int argc, char **argv)
 
                 Vector6d p;
                 p.head<3>() = pointWorld;
-                p[5] = color.data[v * color.step + u * color.channels()];     // blue
-                p[4] = color.data[v * color.step + u * color.channels() + 1]; // green
-                p[3] = color.data[v * color.step + u * color.channels() + 2]; // red
+                p[5] = color.data[v * color.step + u * color.channels()];      // blue
+                p[4] = color.data[v * color.step + u * color.channels() + 1];  // green
+                p[3] = color.data[v * color.step + u * color.channels() + 2];  // red
                 pointcloud.push_back(p);
             }
     }
@@ -106,8 +105,8 @@ int main(int argc, char **argv)
 
 /**
  * @brief show pointcloud using pangolin
- * 
- * @param pointcloud 
+ *
+ * @param pointcloud
  */
 void showPointCloud(const std::vector<Vector6d, Eigen::aligned_allocator<Vector6d>> &pointcloud)
 {
@@ -130,9 +129,8 @@ void showPointCloud(const std::vector<Vector6d, Eigen::aligned_allocator<Vector6
         pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0));
 
     // pangolin d_cam
-    pangolin::View &d_cam = pangolin::CreateDisplay()
-                                .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f / 768.0f)
-                                .SetHandler(new pangolin::Handler3D(s_cam));
+    pangolin::View &d_cam =
+        pangolin::CreateDisplay().SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f / 768.0f).SetHandler(new pangolin::Handler3D(s_cam));
 
     // draw point cloud
     while (pangolin::ShouldQuit() == false)
@@ -152,7 +150,7 @@ void showPointCloud(const std::vector<Vector6d, Eigen::aligned_allocator<Vector6
 
         glEnd();
         pangolin::FinishFrame();
-        usleep(5000); // sleep 5 ms
+        usleep(5000);  // sleep 5 ms
     }
     return;
 }

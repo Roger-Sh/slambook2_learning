@@ -1,5 +1,5 @@
-cmake_minimum_required( VERSION 2.8 )
-project( visualizeGeometry )
+cmake_minimum_required(VERSION 3.10)
+project(visualizeGeometry)
 
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_FLAGS "-O3")
@@ -13,9 +13,9 @@ include_directories(
 add_definitions(${EIGEN_DEFINITIONS})
 
 # pangolin
-set(Pangolin_DIR "${PROJECT_SOURCE_DIR}/../../3rdparty/Pangolin/build/installed")
+set(Pangolin_DIR "${PROJECT_SOURCE_DIR}/../../../3rdparty/Pangolin/build/installed")
 find_package(Pangolin REQUIRED)
 include_directories(${Pangolin_INCLUDE_DIRS})
 
-add_executable( visualizeGeometry visualizeGeometry.cpp )
-target_link_libraries( visualizeGeometry ${Pangolin_LIBRARIES} )
+add_executable(visualizeGeometry visualizeGeometry.cpp)
+target_link_libraries(visualizeGeometry ${Pangolin_LIBRARIES})

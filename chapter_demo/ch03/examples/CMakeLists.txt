@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 project(examples)
 
 set(CMAKE_BUILD_TYPE "Debug")
@@ -13,10 +13,9 @@ include_directories(
 add_definitions(${EIGEN_DEFINITIONS})
 
 # pangolin
-set(Pangolin_DIR "~/Documents/slambook2/3rdparty/Pangolin/build/installed")
-find_package(Pangolin REQUIRED)
+# set(Pangolin_DIR "${PROJECT_SOURCE_DIR}/../../../3rdparty/Pangolin/build/installed")
+find_package(Pangolin REQUIRED PATHS "${PROJECT_SOURCE_DIR}/../../../3rdparty/Pangolin/build/installed" NO_DEFAULT_PATH)
 include_directories(${Pangolin_INCLUDE_DIRS})
-
 
 add_executable(coordinateTransform coordinateTransform.cpp)
 add_executable(plotTrajectory plotTrajectory.cpp)

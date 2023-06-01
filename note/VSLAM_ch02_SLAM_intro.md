@@ -7,6 +7,8 @@
 - 外部传感器：导轨，二维码，GPS，依赖于环境，直接物理量
 - 内部传感器：激光传感器，相机，轮式编码器，IMU，间接物理量
 
+
+
 ### 相机分类
 
 - 单目相机 Monocular
@@ -19,6 +21,8 @@
     - 红外结构光或者ToF(Time-of-Flight)，向物体发射光并接受返回的光
     - 测量范围窄，噪声大，视野小，易受阳光干扰，无法测量透射材质等
 
+
+
 ### 经典SLAM框架
 
 - 传感器信息读取 Sensor Data
@@ -27,6 +31,8 @@
 - 回环检测 (Loop Closure Detection)
 - 建图 (Mapping)
 
+
+
 ### 视觉里程计 VO
 
 - 主要关于计算机视觉领域，图像特征提取与匹配
@@ -34,18 +40,24 @@
 - 累积漂移 Accumulating Drift
 - 需要**后端优化**和**回环检测**
     - 回环检测：负责把“机器人回到原始位置”检测出来
-    - 后端优化：根据回环检测，校正整个轨迹
+    - 后端优化：根据回环检测，**校正整个轨迹**
+
+
 
 ### 后端优化 Optimization
 
 - 主要关于滤波与非线性优化算法
 - 主要处理SLAM过程中的噪声，估计整个系统的状态（包括机器人轨迹，地图）
-- 最大后验概率估计 MAP(Maximum-a-Posteriori)
+- 最大后验概率估计 MAP (Maximum-a-Posteriori)
+
+
 
 ### 回环检测 Loop Closure Detection
 
 - 主要解决 位置估计随时间漂移的问题
 - 识别到过的场景的能力，比如通过判断图像间的相似性
+
+
 
 ### 建图 Mapping
 
@@ -63,7 +75,9 @@
     - 图由节点和边构成，只考虑节点间的连通性
     - 不擅长复杂结构的地图
 
-### SLAM数学表达
+
+
+### SLAM 数学表达
 
 - 数学表达
 
@@ -84,7 +98,7 @@ $$
             - 最简单，无偏最优估计由卡尔曼滤波器 (Kalman Filter, KF) 求解
         - 线性非高斯系统
         - 非线性高斯系统
-        - 非线性非高斯系统，Non-Linear Non-Gaussian NLNG系统
+        - 非线性非高斯系统，Non-Linear Non-Gaussian NLNG 系统
             - 扩展卡尔曼滤波器 (Extended Kalman, Filter EKF)
             - 非线性优化 (None Linear Optimization)
                 - 图优化 (Graph Optimization)

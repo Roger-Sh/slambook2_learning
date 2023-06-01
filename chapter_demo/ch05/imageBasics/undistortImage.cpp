@@ -3,7 +3,7 @@
 
 // using namespace std;
 
-std::string image_file = "../../imageBasics/distorted.png"; // 请确保路径正确
+std::string image_file = "../../../../chapter_demo/ch05/imageBasics/distorted.png";  // 请确保路径正确
 
 int main(int argc, char **argv)
 {
@@ -14,11 +14,11 @@ int main(int argc, char **argv)
     double fx = 458.654, fy = 457.296, cx = 367.215, cy = 248.375;
 
     // 图像是灰度图，CV_8UC1
-    cv::Mat image = cv::imread(image_file, 0); 
+    cv::Mat image = cv::imread(image_file, 0);
     int rows = image.rows, cols = image.cols;
 
     // 初始化去畸变以后的图
-    cv::Mat image_undistort = cv::Mat(rows, cols, CV_8UC1); 
+    cv::Mat image_undistort = cv::Mat(rows, cols, CV_8UC1);
 
     // 计算去畸变后图像的内容
     for (int v = 0; v < rows; v++)

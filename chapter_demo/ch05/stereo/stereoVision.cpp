@@ -1,27 +1,27 @@
-#include <opencv2/opencv.hpp>
-#include <vector>
-#include <string>
-#include <Eigen/Core>
 #include <pangolin/pangolin.h>
 #include <unistd.h>
+
+#include <Eigen/Core>
+#include <opencv2/opencv.hpp>
+#include <string>
+#include <vector>
 
 // using namespace std;
 // using namespace Eigen;
 
 // 文件路径
-std::string left_file = "../../stereo/left.png";
-std::string right_file = "../../stereo/right.png";
+std::string left_file = "../../../../chapter_demo/ch05/stereo/left.png";
+std::string right_file = "../../../../chapter_demo/ch05/stereo/right.png";
 
 // 在pangolin中画图，已写好，无需调整
-void showPointCloud(
-    const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> &pointcloud);
+void showPointCloud(const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> &pointcloud);
 
 /**
  * @brief main
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main(int argc, char **argv)
 {
@@ -36,8 +36,7 @@ int main(int argc, char **argv)
     cv::Mat right = cv::imread(right_file, 0);
 
     // SGBM法生成视差图
-    cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(
-        0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32); // 生成视差图所需参数
+    cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32);  // 生成视差图所需参数
     cv::Mat disparity_sgbm, disparity;
     sgbm->compute(left, right, disparity_sgbm);
     disparity_sgbm.convertTo(disparity, CV_32F, 1.0 / 16.0f);
@@ -52,7 +51,7 @@ int main(int argc, char **argv)
             if (disparity.at<float>(v, u) <= 0.0 || disparity.at<float>(v, u) >= 96.0)
                 continue;
 
-            Eigen::Vector4d point(0, 0, 0, left.at<uchar>(v, u) / 255.0); // 前三维为xyz,第四维为颜色
+            Eigen::Vector4d point(0, 0, 0, left.at<uchar>(v, u) / 255.0);  // 前三维为xyz,第四维为颜色
 
             // 根据双目模型计算 point 的位置
             double x = (u - cx) / fx;
@@ -76,8 +75,8 @@ int main(int argc, char **argv)
 
 /**
  * @brief show pointcloud with pangolin
- * 
- * @param pointcloud 
+ *
+ * @param pointcloud
  */
 void showPointCloud(const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> &pointcloud)
 {
@@ -100,9 +99,8 @@ void showPointCloud(const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<
         pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0));
 
     // d_cam
-    pangolin::View &d_cam = pangolin::CreateDisplay()
-                                .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f / 768.0f)
-                                .SetHandler(new pangolin::Handler3D(s_cam));
+    pangolin::View &d_cam =
+        pangolin::CreateDisplay().SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f / 768.0f).SetHandler(new pangolin::Handler3D(s_cam));
 
     // draw pointcloud
     while (pangolin::ShouldQuit() == false)
@@ -122,7 +120,7 @@ void showPointCloud(const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<
 
         glEnd();
         pangolin::FinishFrame();
-        usleep(5000); // sleep 5 ms
+        usleep(5000);  // sleep 5 ms
     }
     return;
 }

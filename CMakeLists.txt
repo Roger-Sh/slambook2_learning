@@ -10,3 +10,7 @@ find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 add_subdirectory(chapter_demo/ch02)
+add_subdirectory(chapter_demo/ch03)
+add_subdirectory(chapter_demo/ch04)
+add_subdirectory(chapter_demo/ch05)
+add_subdirectory(chapter_demo/ch06)
