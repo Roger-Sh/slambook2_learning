@@ -4,24 +4,24 @@
  * @brief optical flow example
  * @version 0.1
  * @date 2022-09-05
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
-#include <opencv2/opencv.hpp>
-#include <string>
-#include <chrono>
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include <chrono>
+#include <opencv2/opencv.hpp>
+#include <string>
 
 // image data path
-std::string file_1 = "../data/LK1.png"; // first image
-std::string file_2 = "../data/LK2.png"; // second image
+std::string file_1 = "../../../chapter_demo/ch08/data/LK1.png";  // first image
+std::string file_2 = "../../../chapter_demo/ch08/data/LK2.png";  // second image
 
 /**
  * @brief class OpticalFlowTracker
- * 
+ *
  */
 class OpticalFlowTracker
 {
@@ -33,24 +33,33 @@ public:
         const std::vector<cv::KeyPoint> &kp1_,
         std::vector<cv::KeyPoint> &kp2_,
         std::vector<bool> &success_,
-        bool inverse_ = true, bool has_initial_ = false) : img1(img1_), img2(img2_), kp1(kp1_), kp2(kp2_), success(success_), inverse(inverse_),
-                                                           has_initial(has_initial_) {}
+        bool inverse_ = true,
+        bool has_initial_ = false) :
+        img1(img1_),
+        img2(img2_),
+        kp1(kp1_),
+        kp2(kp2_),
+        success(success_),
+        inverse(inverse_),
+        has_initial(has_initial_)
+    {
+    }
     // calculateOpticalFlow
     void calculateOpticalFlow(const cv::Range &range);
 
 private:
-    const cv::Mat &img1;                    // img1
-    const cv::Mat &img2;                    // img2
-    const std::vector<cv::KeyPoint> &kp1;   // kp1, no change
-    std::vector<cv::KeyPoint> &kp2;         // kp2
-    std::vector<bool> &success;             // success flag
-    bool inverse = true;                    // use inverse formulation
-    bool has_initial = false;               // has initial estimation?
+    const cv::Mat &img1;                   // img1
+    const cv::Mat &img2;                   // img2
+    const std::vector<cv::KeyPoint> &kp1;  // kp1, no change
+    std::vector<cv::KeyPoint> &kp2;        // kp2
+    std::vector<bool> &success;            // success flag
+    bool inverse = true;                   // use inverse formulation
+    bool has_initial = false;              // has initial estimation?
 };
 
 /**
  * @brief single level optical flow
- * 
+ *
  * @param [in] img1 the first image
  * @param [in] img2 the second image
  * @param [in] kp1 keypoints in img1
@@ -113,20 +122,18 @@ inline float GetPixelValue(const cv::Mat &img, float x, float y)
     int y_a1 = std::min(img.rows - 1, int(y) + 1);
 
     // Bi-Interpolation
-    float pixel_value = (1 - xx) * (1 - yy) * img.at<uchar>(y, x) + 
-        xx * (1 - yy) * img.at<uchar>(y, x_a1) + 
-        (1 - xx) * yy * img.at<uchar>(y_a1, x) + 
-        xx * yy * img.at<uchar>(y_a1, x_a1);
+    float pixel_value = (1 - xx) * (1 - yy) * img.at<uchar>(y, x) + xx * (1 - yy) * img.at<uchar>(y, x_a1) + (1 - xx) * yy * img.at<uchar>(y_a1, x) +
+                        xx * yy * img.at<uchar>(y_a1, x_a1);
 
     return pixel_value;
 }
 
 /**
  * @brief main, optical flow example
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main(int argc, char **argv)
 {
@@ -137,7 +144,7 @@ int main(int argc, char **argv)
     // img1 key points, using GFTT here.
     // useHarrisDetector 决定使用 Harris 判定依据还是 Shi-Tomasi 判定依据
     std::vector<cv::KeyPoint> kp1;
-    cv::Ptr<cv::GFTTDetector> detector = cv::GFTTDetector::create(500, 0.01, 20); // maximum 500 keypoints
+    cv::Ptr<cv::GFTTDetector> detector = cv::GFTTDetector::create(500, 0.01, 20);  // maximum 500 keypoints
     detector->detect(img1, kp1);
 
     // now lets track these key points in the second image
@@ -213,7 +220,7 @@ int main(int argc, char **argv)
 
 /**
  * @brief single level optical flow
- * 
+ *
  * @param [in] img1 the first image
  * @param [in] img2 the second image
  * @param [in] kp1 keypoints in img1
@@ -227,7 +234,8 @@ void OpticalFlowSingleLevel(
     const std::vector<cv::KeyPoint> &kp1,
     std::vector<cv::KeyPoint> &kp2,
     std::vector<bool> &success,
-    bool inverse, bool has_initial)
+    bool inverse,
+    bool has_initial)
 {
     // kp2 size == kp1 size
     kp2.resize(kp1.size());
@@ -239,13 +247,7 @@ void OpticalFlowSingleLevel(
     OpticalFlowTracker tracker(img1, img2, kp1, kp2, success, inverse, has_initial);
 
     // 并行计算
-    cv::parallel_for_(
-        cv::Range(0, kp1.size()),
-        std::bind(
-            &OpticalFlowTracker::calculateOpticalFlow, 
-            &tracker, 
-            std::placeholders::_1)
-        );
+    cv::parallel_for_(cv::Range(0, kp1.size()), std::bind(&OpticalFlowTracker::calculateOpticalFlow, &tracker, std::placeholders::_1));
 }
 
 /**
@@ -268,12 +270,12 @@ void OpticalFlowMultiLevel(
 {
     // parameters
     int pyramids = 4;
-    double pyramid_scale = 0.5; 
+    double pyramid_scale = 0.5;
     double scales[] = {1.0, 0.5, 0.25, 0.125};
 
     // create pyramids
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-    std::vector<cv::Mat> pyr1, pyr2; // image pyramids
+    std::vector<cv::Mat> pyr1, pyr2;  // image pyramids
     for (int i = 0; i < pyramids; i++)
     {
         if (i == 0)
@@ -285,10 +287,8 @@ void OpticalFlowMultiLevel(
         {
             // 新的图层为之前图层长宽尺寸的0.5
             cv::Mat img1_pyr, img2_pyr;
-            cv::resize(pyr1[i - 1], img1_pyr,
-                       cv::Size(pyr1[i - 1].cols * pyramid_scale, pyr1[i - 1].rows * pyramid_scale));
-            cv::resize(pyr2[i - 1], img2_pyr,
-                       cv::Size(pyr2[i - 1].cols * pyramid_scale, pyr2[i - 1].rows * pyramid_scale));
+            cv::resize(pyr1[i - 1], img1_pyr, cv::Size(pyr1[i - 1].cols * pyramid_scale, pyr1[i - 1].rows * pyramid_scale));
+            cv::resize(pyr2[i - 1], img2_pyr, cv::Size(pyr2[i - 1].cols * pyramid_scale, pyr2[i - 1].rows * pyramid_scale));
             pyr1.push_back(img1_pyr);
             pyr2.push_back(img2_pyr);
         }
@@ -338,14 +338,14 @@ void OpticalFlowMultiLevel(
 
 /**
  * @brief calculateOpticalFlow using Gauss-Newton optimize method
- * 
- * @param range 
+ *
+ * @param range
  */
 void OpticalFlowTracker::calculateOpticalFlow(const cv::Range &range)
 {
     // parameters
-    int half_patch_size = 4;    // half_patch_size for kp patch window
-    int iterations = 10;        // iterations for gauss-newton optimization
+    int half_patch_size = 4;  // half_patch_size for kp patch window
+    int iterations = 10;      // iterations for gauss-newton optimization
 
     // iterate this range of kp1 vec
     for (size_t i = range.start; i < range.end; i++)
@@ -354,7 +354,7 @@ void OpticalFlowTracker::calculateOpticalFlow(const cv::Range &range)
         auto kp = kp1[i];
 
         // dx,dy need to be estimated
-        double dx = 0, dy = 0; 
+        double dx = 0, dy = 0;
 
         // if kp2 has initial estimation, prefix=false
         if (has_initial)
@@ -365,18 +365,18 @@ void OpticalFlowTracker::calculateOpticalFlow(const cv::Range &range)
 
         // param for gauss newton
         double cost = 0, lastCost = 0;
-        bool succ = true; // indicate if this point succeeded
+        bool succ = true;  // indicate if this point succeeded
 
         // Gauss-Newton iterations
-        Eigen::Matrix2d H = Eigen::Matrix2d::Zero(); // hessian
-        Eigen::Vector2d b = Eigen::Vector2d::Zero(); // bias
-        Eigen::Vector2d J;                           // jacobian
+        Eigen::Matrix2d H = Eigen::Matrix2d::Zero();  // hessian
+        Eigen::Vector2d b = Eigen::Vector2d::Zero();  // bias
+        Eigen::Vector2d J;                            // jacobian
         for (int iter = 0; iter < iterations; iter++)
         {
             // check inverse formulation
             if (inverse == false)
             {
-                H = Eigen::Matrix2d::Zero(); 
+                H = Eigen::Matrix2d::Zero();
                 b = Eigen::Vector2d::Zero();
             }
             else
@@ -393,29 +393,26 @@ void OpticalFlowTracker::calculateOpticalFlow(const cv::Range &range)
                 for (int y = -half_patch_size; y < half_patch_size; y++)
                 {
                     // e = (I(x, y) - I(x+dx, y+dy))
-                    double error = GetPixelValue(img1, kp.pt.x + x, kp.pt.y + y) -
-                                   GetPixelValue(img2, kp.pt.x + x + dx, kp.pt.y + y + dy);
-                    
+                    double error = GetPixelValue(img1, kp.pt.x + x, kp.pt.y + y) - GetPixelValue(img2, kp.pt.x + x + dx, kp.pt.y + y + dy);
+
                     // Jacobian
                     if (inverse == false)
                     {
                         // -(Ix, Iy), -(grad_x, grad_y)
                         // if not in inverse mode, update J every time
                         J = -1.0 * Eigen::Vector2d(
-                                0.5 * (GetPixelValue(img2, kp.pt.x + dx + x + 1, kp.pt.y + dy + y) -
-                                        GetPixelValue(img2, kp.pt.x + dx + x - 1, kp.pt.y + dy + y)),
-                                0.5 * (GetPixelValue(img2, kp.pt.x + dx + x, kp.pt.y + dy + y + 1) -
-                                        GetPixelValue(img2, kp.pt.x + dx + x, kp.pt.y + dy + y - 1)));
+                                       0.5 * (GetPixelValue(img2, kp.pt.x + dx + x + 1, kp.pt.y + dy + y) -
+                                              GetPixelValue(img2, kp.pt.x + dx + x - 1, kp.pt.y + dy + y)),
+                                       0.5 * (GetPixelValue(img2, kp.pt.x + dx + x, kp.pt.y + dy + y + 1) -
+                                              GetPixelValue(img2, kp.pt.x + dx + x, kp.pt.y + dy + y - 1)));
                     }
                     else if (iter == 0)
                     {
                         // in inverse mode, J keeps same for all iterations
                         // NOTE this J does not change when dx, dy is updated, so we can store it and only compute error
                         J = -1.0 * Eigen::Vector2d(
-                                       0.5 * (GetPixelValue(img1, kp.pt.x + x + 1, kp.pt.y + y) -
-                                              GetPixelValue(img1, kp.pt.x + x - 1, kp.pt.y + y)),
-                                       0.5 * (GetPixelValue(img1, kp.pt.x + x, kp.pt.y + y + 1) -
-                                              GetPixelValue(img1, kp.pt.x + x, kp.pt.y + y - 1)));
+                                       0.5 * (GetPixelValue(img1, kp.pt.x + x + 1, kp.pt.y + y) - GetPixelValue(img1, kp.pt.x + x - 1, kp.pt.y + y)),
+                                       0.5 * (GetPixelValue(img1, kp.pt.x + x, kp.pt.y + y + 1) - GetPixelValue(img1, kp.pt.x + x, kp.pt.y + y - 1)));
                     }
                     // compute H, b and set cost;
                     b += -error * J;
@@ -441,7 +438,7 @@ void OpticalFlowTracker::calculateOpticalFlow(const cv::Range &range)
             }
 
             // check cost
-            // if cost > last_cost, break the loop 
+            // if cost > last_cost, break the loop
             if (iter > 0 && cost > lastCost)
             {
                 break;
