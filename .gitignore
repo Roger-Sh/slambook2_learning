@@ -37,10 +37,6 @@
 *cmake-build-*
 *.idea
 **build**
-/build
-build/
-build
-**3rdparty**
 
 
 */bin
