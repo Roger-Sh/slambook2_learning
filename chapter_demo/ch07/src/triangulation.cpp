@@ -2,59 +2,65 @@
 #include <opencv2/opencv.hpp>
 // #include "extra.h" // used in opencv2
 
+std::string img1_path = "../../../chapter_demo/ch07/image/1.png";
+std::string img2_path = "../../../chapter_demo/ch07/image/2.png";
+
 /**
  * @brief find match feature
- * 
- * @param img_1 
- * @param img_2 
- * @param keypoints_1 
- * @param keypoints_2 
- * @param matches 
+ *
+ * @param img_1
+ * @param img_2
+ * @param keypoints_1
+ * @param keypoints_2
+ * @param matches
  */
 void find_feature_matches(
-    const cv::Mat &img_1, const cv::Mat &img_2,
+    const cv::Mat &img_1,
+    const cv::Mat &img_2,
     std::vector<cv::KeyPoint> &keypoints_1,
     std::vector<cv::KeyPoint> &keypoints_2,
     std::vector<cv::DMatch> &matches);
 
 /**
  * @brief estimate pose based on 2d-2d
- * 
- * @param keypoints_1 
- * @param keypoints_2 
- * @param matches 
- * @param R 
- * @param t 
+ *
+ * @param keypoints_1
+ * @param keypoints_2
+ * @param matches
+ * @param R
+ * @param t
  */
 void pose_estimation_2d2d(
     const std::vector<cv::KeyPoint> &keypoints_1,
     const std::vector<cv::KeyPoint> &keypoints_2,
     const std::vector<cv::DMatch> &matches,
-    cv::Mat &R, cv::Mat &t);
+    cv::Mat &R,
+    cv::Mat &t);
 
 /**
  * @brief triangulation
- * 
- * @param keypoint_1 
- * @param keypoint_2 
- * @param matches 
- * @param R 
- * @param t 
- * @param points 
+ *
+ * @param keypoint_1
+ * @param keypoint_2
+ * @param matches
+ * @param R
+ * @param t
+ * @param points
  */
 void triangulation(
     const std::vector<cv::KeyPoint> &keypoint_1,
     const std::vector<cv::KeyPoint> &keypoint_2,
     const std::vector<cv::DMatch> &matches,
-    const cv::Mat &R, const cv::Mat &t,
+    const cv::Mat &R,
+    const cv::Mat &t,
     std::vector<cv::Point3d> &points);
 
 /**
  * @brief Get the color object, for drawing
  * inline for small func, which will be called many times
- * 
- * @param depth 
- * @return cv::Scalar 
+ *
+ * @param depth
+ * @return cv::Scalar
  */
 inline cv::Scalar get_color(float depth)
 {
@@ -68,32 +74,31 @@ inline cv::Scalar get_color(float depth)
 
 /**
  * @brief 像素坐标转相机归一化坐标
- * 
- * @param p 
- * @param K 
- * @return cv::Point2f 
+ *
+ * @param p
+ * @param K
+ * @return cv::Point2f
  */
 cv::Point2f pixel2cam(const cv::Point2d &p, const cv::Mat &K);
 
-
 /**
  * @brief main, test triangulation
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main(int argc, char **argv)
 {
     // check args: img1, img2
-    if (argc != 3)
-    {
-        std::cout << "usage: triangulation img1 img2" << std::endl;
-        return 1;
-    }
+    // if (argc != 3)
+    // {
+    //     std::cout << "usage: triangulation img1 img2" << std::endl;
+    //     return 1;
+    // }
     // read img
-    cv::Mat img_1 = cv::imread(argv[1], CV_LOAD_IMAGE_COLOR);
-    cv::Mat img_2 = cv::imread(argv[2], CV_LOAD_IMAGE_COLOR);
+    cv::Mat img_1 = cv::imread(img1_path, CV_LOAD_IMAGE_COLOR);
+    cv::Mat img_2 = cv::imread(img2_path, CV_LOAD_IMAGE_COLOR);
 
     // find ORB feature matches
     std::vector<cv::KeyPoint> keypoints_1, keypoints_2;
@@ -122,8 +127,8 @@ int main(int argc, char **argv)
         cv::circle(img1_plot, keypoints_1[matches[i].queryIdx].pt, 2, get_color(depth1), 2);
 
         // img1 draw reprojected points
-        int img1_u = (K.at<double>(0, 0)*points[i].x + K.at<double>(0, 2)*points[i].z)/points[i].z;
-        int img1_v = (K.at<double>(1, 1)*points[i].y + K.at<double>(1, 2)*points[i].z)/points[i].z;
+        int img1_u = (K.at<double>(0, 0) * points[i].x + K.at<double>(0, 2) * points[i].z) / points[i].z;
+        int img1_v = (K.at<double>(1, 1) * points[i].y + K.at<double>(1, 2) * points[i].z) / points[i].z;
         cv::circle(img1_plot, cv::Point(img1_u, img1_v), 10, get_color(depth1), 2);
 
         // img2, draw original keypoints with depth
@@ -132,11 +137,9 @@ int main(int argc, char **argv)
         cv::circle(img2_plot, keypoints_2[matches[i].trainIdx].pt, 2, get_color(depth2), 2);
 
         // img2 draw reprojected points
-        int img2_u = (K.at<double>(0, 0)*pt2_trans.at<double>(0, 0) + K.at<double>(0, 2)*pt2_trans.at<double>(2, 0))/pt2_trans.at<double>(2, 0);
-        int img2_v = (K.at<double>(1, 1)*pt2_trans.at<double>(1, 0) + K.at<double>(1, 2)*pt2_trans.at<double>(2, 0))/pt2_trans.at<double>(2, 0);
+        int img2_u = (K.at<double>(0, 0) * pt2_trans.at<double>(0, 0) + K.at<double>(0, 2) * pt2_trans.at<double>(2, 0)) / pt2_trans.at<double>(2, 0);
+        int img2_v = (K.at<double>(1, 1) * pt2_trans.at<double>(1, 0) + K.at<double>(1, 2) * pt2_trans.at<double>(2, 0)) / pt2_trans.at<double>(2, 0);
         cv::circle(img2_plot, cv::Point(img2_u, img2_v), 10, get_color(depth2), 2);
-
-        
     }
     cv::imshow("img 1", img1_plot);
     cv::imshow("img 2", img2_plot);
@@ -147,14 +150,16 @@ int main(int argc, char **argv)
 
 /**
  * @brief find match feature
- * 
- * @param img_1 
- * @param img_2 
- * @param keypoints_1 
- * @param keypoints_2 
- * @param matches 
+ *
+ * @param img_1
+ * @param img_2
+ * @param keypoints_1
+ * @param keypoints_2
+ * @param matches
  */
-void find_feature_matches(const cv::Mat &img_1, const cv::Mat &img_2,
+void find_feature_matches(
+    const cv::Mat &img_1,
+    const cv::Mat &img_2,
     std::vector<cv::KeyPoint> &keypoints_1,
     std::vector<cv::KeyPoint> &keypoints_2,
     std::vector<cv::DMatch> &matches)
@@ -184,7 +189,7 @@ void find_feature_matches(const cv::Mat &img_1, const cv::Mat &img_2,
     matcher->match(descriptors_1, descriptors_2, match);
 
     //-- 第四步:匹配点对筛选
-    //找出所有匹配之间的最小距离和最大距离, 即是最相似的和最不相似的两组点之间的距离
+    // 找出所有匹配之间的最小距离和最大距离, 即是最相似的和最不相似的两组点之间的距离
     double min_dist = 10000, max_dist = 0;
     for (int i = 0; i < descriptors_1.rows; i++)
     {
@@ -197,7 +202,7 @@ void find_feature_matches(const cv::Mat &img_1, const cv::Mat &img_2,
     printf("-- Max dist : %f \n", max_dist);
     printf("-- Min dist : %f \n", min_dist);
 
-    //当描述子之间的距离大于两倍的最小距离时,即认为匹配有误.但有时候最小距离会非常小,设置一个经验值30作为下限.
+    // 当描述子之间的距离大于两倍的最小距离时,即认为匹配有误.但有时候最小距离会非常小,设置一个经验值30作为下限.
     for (int i = 0; i < descriptors_1.rows; i++)
     {
         if (match[i].distance <= std::max(2 * min_dist, 30.0))
@@ -209,18 +214,19 @@ void find_feature_matches(const cv::Mat &img_1, const cv::Mat &img_2,
 
 /**
  * @brief estimate pose based on 2d-2d
- * 
- * @param keypoints_1 
- * @param keypoints_2 
- * @param matches 
- * @param R 
- * @param t 
+ *
+ * @param keypoints_1
+ * @param keypoints_2
+ * @param matches
+ * @param R
+ * @param t
  */
 void pose_estimation_2d2d(
     const std::vector<cv::KeyPoint> &keypoints_1,
     const std::vector<cv::KeyPoint> &keypoints_2,
     const std::vector<cv::DMatch> &matches,
-    cv::Mat &R, cv::Mat &t)
+    cv::Mat &R,
+    cv::Mat &t)
 {
     // 相机内参,TUM Freiburg2
     cv::Mat K = (cv::Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
@@ -235,8 +241,8 @@ void pose_estimation_2d2d(
     }
 
     //-- 计算本质矩阵
-    cv::Point2d principal_point(325.1, 249.7); //相机主点, TUM dataset标定值
-    int focal_length = 521;                //相机焦距, TUM dataset标定值
+    cv::Point2d principal_point(325.1, 249.7);  // 相机主点, TUM dataset标定值
+    int focal_length = 521;                     // 相机焦距, TUM dataset标定值
     cv::Mat essential_matrix;
     essential_matrix = findEssentialMat(points1, points2, focal_length, principal_point);
 
@@ -246,28 +252,37 @@ void pose_estimation_2d2d(
 
 /**
  * @brief triangulation
- * 
- * @param keypoint_1 
- * @param keypoint_2 
- * @param matches 
- * @param R 
- * @param t 
- * @param points 
+ *
+ * @param keypoint_1
+ * @param keypoint_2
+ * @param matches
+ * @param R
+ * @param t
+ * @param points
  */
 void triangulation(
     const std::vector<cv::KeyPoint> &keypoint_1,
     const std::vector<cv::KeyPoint> &keypoint_2,
     const std::vector<cv::DMatch> &matches,
-    const cv::Mat &R, const cv::Mat &t,
+    const cv::Mat &R,
+    const cv::Mat &t,
     std::vector<cv::Point3d> &points)
 {
     // 相机之间的转换矩阵
-    cv::Mat T1 = (cv::Mat_<float>(3, 4) << 1, 0, 0, 0,
-              0, 1, 0, 0,
-              0, 0, 1, 0);
-    cv::Mat T2 = (cv::Mat_<float>(3, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
-              R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
-              R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), t.at<double>(2, 0));
+    cv::Mat T1 = (cv::Mat_<float>(3, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
+    cv::Mat T2 =
+        (cv::Mat_<float>(3, 4) << R.at<double>(0, 0),
+         R.at<double>(0, 1),
+         R.at<double>(0, 2),
+         t.at<double>(0, 0),
+         R.at<double>(1, 0),
+         R.at<double>(1, 1),
+         R.at<double>(1, 2),
+         t.at<double>(1, 0),
+         R.at<double>(2, 0),
+         R.at<double>(2, 1),
+         R.at<double>(2, 2),
+         t.at<double>(2, 0));
 
     // 相机内参矩阵
     cv::Mat K = (cv::Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
@@ -288,25 +303,20 @@ void triangulation(
     for (int i = 0; i < pts_4d.cols; i++)
     {
         cv::Mat x = pts_4d.col(i);
-        x /= x.at<float>(3, 0); // 归一化
-        cv::Point3d p(
-            x.at<float>(0, 0),
-            x.at<float>(1, 0),
-            x.at<float>(2, 0));
+        x /= x.at<float>(3, 0);  // 归一化
+        cv::Point3d p(x.at<float>(0, 0), x.at<float>(1, 0), x.at<float>(2, 0));
         points.push_back(p);
     }
 }
 
 /**
  * @brief 像素坐标转相机归一化坐标
- * 
- * @param p 
- * @param K 
- * @return cv::Point2f 
+ *
+ * @param p
+ * @param K
+ * @return cv::Point2f
  */
 cv::Point2f pixel2cam(const cv::Point2d &p, const cv::Mat &K)
 {
-    return cv::Point2f(
-        (p.x - K.at<double>(0, 2)) / K.at<double>(0, 0),
-        (p.y - K.at<double>(1, 2)) / K.at<double>(1, 1));
+    return cv::Point2f((p.x - K.at<double>(0, 2)) / K.at<double>(0, 0), (p.y - K.at<double>(1, 2)) / K.at<double>(1, 1));
 }
