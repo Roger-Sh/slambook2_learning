@@ -3,25 +3,40 @@
 
 #include <Eigen/Core>
 
-// 本例演示了如何画出一个预先存储的轨迹
-
-using namespace std;
-using namespace Eigen;
+/**
+ * @brief 本例演示了如何画出一个预先存储的轨迹
+ *
+ */
 
 // path to trajectory file
-string trajectory_file = "../../../../chapter_demo/ch03/examples/trajectory.txt";
+std::string trajectory_file = "../../../../chapter_demo/ch03/examples/trajectory.txt";
 
-void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>>);
+/**
+ * @brief draw trajectory using pangolin
+ *
+ * @param poses
+ */
+void DrawTrajectory(std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> poses);
 
+/**
+ * @brief main
+ *
+ * @param argc
+ * @param argv
+ * @return int
+ */
 int main(int argc, char **argv)
 {
     // init poses vector with Eigen
     // STL using Eigen with aligned_allocator to avoid segmentation fault
-    vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> poses;
-    ifstream fin(trajectory_file);
+    // 内存对齐，用于 CPU SSE 指令集 加速运算
+    std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> poses;
+
+    // check file
+    std::ifstream fin(trajectory_file);
     if (!fin)
     {
-        cout << "cannot find trajectory file at " << trajectory_file << endl;
+        std::cout << "cannot find trajectory file at " << trajectory_file << std::endl;
         return 1;
     }
 
@@ -33,19 +48,23 @@ int main(int argc, char **argv)
         fin >> time >> tx >> ty >> tz >> qx >> qy >> qz >> qw;
 
         // transform with quaternion and translation
-        Isometry3d Twr(Quaterniond(qw, qx, qy, qz));
-        Twr.pretranslate(Vector3d(tx, ty, tz));
+        Eigen::Isometry3d Twr(Eigen::Quaterniond(qw, qx, qy, qz));
+        Twr.pretranslate(Eigen::Vector3d(tx, ty, tz));
         poses.push_back(Twr);
     }
-    cout << "read total " << poses.size() << " pose entries" << endl;
+    std::cout << "read total " << poses.size() << " pose entries" << std::endl;
 
     // draw trajectory in pangolin
     DrawTrajectory(poses);
     return 0;
 }
 
-/*******************************************************************************************/
-void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> poses)
+/**
+ * @brief draw trajectory using pangolin
+ *
+ * @param poses
+ */
+void DrawTrajectory(std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> poses)
 {
     // create pangolin window and plot the trajectory
     pangolin::CreateWindowAndBind("Trajectory Viewer", 1024, 768);
@@ -70,10 +89,10 @@ void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> pos
         // 画每个位姿的三个坐标轴
         for (size_t i = 0; i < poses.size(); i++)
         {
-            Vector3d Ow = poses[i].translation();
-            Vector3d Xw = poses[i] * (0.1 * Vector3d(1, 0, 0));
-            Vector3d Yw = poses[i] * (0.1 * Vector3d(0, 1, 0));
-            Vector3d Zw = poses[i] * (0.1 * Vector3d(0, 0, 1));
+            Eigen::Vector3d Ow = poses[i].translation();
+            Eigen::Vector3d Xw = poses[i] * (0.1 * Eigen::Vector3d(1, 0, 0));
+            Eigen::Vector3d Yw = poses[i] * (0.1 * Eigen::Vector3d(0, 1, 0));
+            Eigen::Vector3d Zw = poses[i] * (0.1 * Eigen::Vector3d(0, 0, 1));
             glBegin(GL_LINES);
             glColor3f(1.0, 0.0, 0.0);
             glVertex3d(Ow[0], Ow[1], Ow[2]);

@@ -5,9 +5,6 @@
 #include <iostream>
 #include <sophus/se3.hpp>
 
-// using namespace Sophus;
-// using namespace std;
-
 // trajectory file path
 std::string groundtruth_file = "../../../../chapter_demo/ch04/example/groundtruth.txt";
 std::string estimated_file = "../../../../chapter_demo/ch04/example/estimated.txt";
@@ -15,13 +12,29 @@ std::string estimated_file = "../../../../chapter_demo/ch04/example/estimated.tx
 // TrajectoryType
 typedef std::vector<Sophus::SE3d, Eigen::aligned_allocator<Sophus::SE3d>> TrajectoryType;
 
-// DrawTrajectory
+/**
+ * @brief draw trajectory
+ *
+ * @param gt: ground truth trajectory
+ * @param esti: estimated trajectory
+ */
 void DrawTrajectory(const TrajectoryType &gt, const TrajectoryType &esti);
 
-// ReadTrajectory
+/**
+ * @brief read trajectory
+ *
+ * @param path: trajectory path file
+ * @return TrajectoryType
+ */
 TrajectoryType ReadTrajectory(const std::string &path);
 
-// main
+/**
+ * @brief 本程序演示了如何通过 Sophus 计算真值轨迹与预测轨迹之间的误差
+ *
+ * @param argc
+ * @param argv
+ * @return int
+ */
 int main(int argc, char **argv)
 {
     // read trajectory
@@ -30,7 +43,7 @@ int main(int argc, char **argv)
     assert(!groundtruth.empty() && !estimated.empty());
     assert(groundtruth.size() == estimated.size());
 
-    // compute rmse
+    // compute RMSE 均方根误差 （即绝对轨迹误差 ATE）
     double rmse = 0;
     for (size_t i = 0; i < estimated.size(); i++)
     {

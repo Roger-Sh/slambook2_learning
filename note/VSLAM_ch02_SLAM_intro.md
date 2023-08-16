@@ -107,8 +107,8 @@ $$
 
 ### CPP-Demo
 
--   helloSLAM.cpp
-    -   simple cpp start demo
--   useHello.cpp
-    -   a cpp shared lib demo
+-   helloSLAM
+    -   简单的 C++ 程序
+-   useHello
+    -   使用 C++ shared library 的例子
 

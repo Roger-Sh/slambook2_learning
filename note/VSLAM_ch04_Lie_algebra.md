@@ -168,7 +168,7 @@ $$
 $$
 \boldsymbol{\phi} = \theta \boldsymbol{a},\quad \|\boldsymbol{a}\|=1 \\
 $$
- $\mathfrak{s o}(3)$ 到  $\text{SO}(3)$ 的指数映射：
+ $\mathfrak{s o}(3)$ 到  $\text{SO}(3)$ 的指数映射（**类似罗德里格斯公式！*）：
 $$
 \begin{align}
 \boldsymbol{R} 
@@ -178,7 +178,7 @@ $$
 &= \cos \theta \boldsymbol{I}+(1-\cos \theta) \boldsymbol{a} \boldsymbol{a}^{\mathrm{T}}+\sin \theta \boldsymbol{a}^{\wedge}
 \end{align}
 $$
-$\text{SO}(3)$ 到 $\mathfrak{s o}(3)$ 的对数映射：
+$\text{SO}(3)$ 到 $\mathfrak{s o}(3)$ 的对数映射（ 通过对 $\boldsymbol{R}$ 求迹，即求矩阵对角线元素之和）：
 $$
 \begin{align}
 \boldsymbol{\phi}
@@ -331,7 +331,7 @@ $$
 
 ##### 扰动模型求导法(左乘)
 
-对空间点 $\boldsymbol{p}$ 旋转 $\boldsymbol{R}$, 得到 $\boldsymbol{R}\boldsymbol{p}$, 对$\boldsymbol{R}$ 进行一次扰动 $\Delta\boldsymbol{R}$, 看结果相对于扰动的变化率. 以左扰动为例, 设左扰动 $\Delta\boldsymbol{R}$ 对应的李代数为 $\boldsymbol{\varphi}$, 对 $\boldsymbol{\varphi}$ 求导, 结果比李代数求导法省去一个 $\boldsymbol{J}_l$ 的计算: 
+对空间点 $\boldsymbol{p}$ 旋转 $\boldsymbol{R}$, 得到 $\boldsymbol{R}\boldsymbol{p}$, 对$\boldsymbol{R}$ 进行一次扰动 $\Delta\boldsymbol{R}$, 看结果相对于扰动的变化率. 以左扰动为例, 设左扰动 $\Delta\boldsymbol{R}$ 对应的李代数为 $\boldsymbol{\varphi}$, 对 $\boldsymbol{\varphi}$ 求导, **结果比李代数求导法省去一个 $\boldsymbol{J}_l$ 的计算:** 
 $$
 \frac{\partial(\boldsymbol{R} \boldsymbol{p})}{\partial \boldsymbol{\varphi}}=\lim _{\boldsymbol{\varphi} \rightarrow 0} \frac{\exp \left(\boldsymbol{\varphi}^{\wedge}\right) \exp \left(\boldsymbol{\phi}^{\wedge}\right) \boldsymbol{p}-\exp \left(\boldsymbol{\phi}^{\wedge}\right) \boldsymbol{p}}{\boldsymbol{\varphi}} = -(\boldsymbol{R}\boldsymbol{p})^{\wedge}
 $$
@@ -445,3 +445,12 @@ $$
 \end{array}\right]
 $$
 
+
+
+### 4.6 CPP Demo
+
+-   useSophus
+    -   本程序演示 Sophus 库的基本用法，SO3 <---> so3，SE3 <---> se3
+-   example
+    -   trajectoryError
+        -   本程序演示了如何通过 Sophus 库计算真值轨迹与预测轨迹之间的误差

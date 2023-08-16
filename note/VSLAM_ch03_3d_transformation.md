@@ -88,7 +88,7 @@ $$
 
 - 旋转向量的方向与单位长度的旋转轴$\boldsymbol{n}$一致，长度等于旋转角$\theta$，则可以表示为$\theta \boldsymbol{n}$
 
-- 罗德里格斯公式
+- **罗德里格斯公式**
 
     - 从旋转向量 $\theta \boldsymbol{n}$ 到旋转矩阵 $\boldsymbol{R}$
 
@@ -96,11 +96,13 @@ $$
     \boldsymbol{R} = \cos(\theta )\boldsymbol{I} + (1-\cos(\theta))\boldsymbol{n}\boldsymbol{n}^{\mathrm{T}} + \sin(\theta)\boldsymbol{n}^{\land}
     $$
 
-    - 从旋转矩阵 $\boldsymbol{R}$ 到旋转向量 $\theta \boldsymbol{n}$
+    - 从旋转矩阵 $\boldsymbol{R}$ 到旋转向量 $\theta \boldsymbol{n}$， 通过对 $\boldsymbol{R}$ 求迹（即求矩阵对角线元素之和）：
 
     $$
+    \theta = \arccos(\frac{(\mathrm{tr}(\boldsymbol{R})) - 1}{2}) \\
     \theta = \arccos(\frac{(1+2\cos(\theta)) - 1}{2}) \\
-    \boldsymbol{R}\boldsymbol{n} = \boldsymbol{n}, (\boldsymbol{R}-\bold{I})\boldsymbol{n} = \boldsymbol{0}
+    \boldsymbol{R}\boldsymbol{n} 
+    = \boldsymbol{n}, (\boldsymbol{R}-\bold{I})\boldsymbol{n} = \boldsymbol{0}
     $$
 
 - 旋转向量的奇异性发生在转角$\theta$超过$2\pi$时产生周期性
@@ -275,3 +277,18 @@ $$
         $$
 
         
+
+
+
+
+
+### CPP Demo
+
+-   useEigen
+    -   使用 Eigen 库的例子
+-   useGeometry
+    -   使用 Eigen 中的几何库的例子
+-   visualizeGeometry
+    -   使用 pangolin 库进行可视化的例子
+-   examples
+    -   使用 pangolin 库可视化预先储存的轨迹
