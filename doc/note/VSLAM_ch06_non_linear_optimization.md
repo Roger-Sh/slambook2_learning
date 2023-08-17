@@ -4,14 +4,16 @@
 
 ### 6.1 状态估计问题
 
-#### 批量状态估计与最大后验估计
+#### 经典SLAM模型
 
 -   经典SLAM模型: 
     -   $\boldsymbol{x}_{k-1}$, 前一刻相机位姿
     -   $\boldsymbol{u}_k$, 此刻运动控制
+    -   $f$ 运动方程
     -   $\boldsymbol{w}_k$, 此刻运动噪声
     -   $\boldsymbol{x}_k$, 此刻相机位姿
     -   $\boldsymbol{y}_j$, 此刻观测的路标
+    -   $h$ 观测方程
     -   $\boldsymbol{v}_{k,j}$, 此刻观测噪声
     -   $\boldsymbol{z}_{k,j}$, 此刻观测结果, 即路标对应到图像上的像素位置 
 
@@ -49,14 +51,15 @@ $$
 -   估计方法
 
     -   增量式
-        -   扩展卡尔曼滤波
+        -   扩展卡尔曼滤波（放到后端讲解）
     -   批量式
         -   局部批量: 滑动窗口法
         -   全局批量: SfM, Structure from Motion
+    -   最大似然估计
 
 
 
-#### 全局批量法SfM
+#### 最大后验估计
 
 -   考虑从1到N的所有时刻, 假设有M个路标, 定义所有时刻的机器人位姿 $\boldsymbol{x}$ 和路标点坐标 $\boldsymbol{y}$ 为:
     $$
@@ -73,170 +76,174 @@ $$
         P(\boldsymbol{x}, \boldsymbol{y} \mid \boldsymbol{z})
         $$
 
-    -   贝叶斯法则
-        $$
-        P(\boldsymbol{x}, \boldsymbol{y} \mid \boldsymbol{z}, \boldsymbol{u})=\frac{P(\boldsymbol{z}, \boldsymbol{u} \mid \boldsymbol{x}, \boldsymbol{y}) P(\boldsymbol{x}, \boldsymbol{y})}{P(\boldsymbol{z}, \boldsymbol{u})} \propto \underbrace{P(\boldsymbol{z}, \boldsymbol{u} \mid \boldsymbol{x}, \boldsymbol{y})}_{\text {似然 }} \underbrace{P(\boldsymbol{x}, \boldsymbol{y})}_{\text {先验 }} .
-        $$
+-   贝叶斯法则
+    $$
+    \underbrace{P(\boldsymbol{x}, \boldsymbol{y} \mid \boldsymbol{z}, \boldsymbol{u})}_{\text{后验}}
+    =
+    \frac{P(\boldsymbol{z}, \boldsymbol{u} \mid \boldsymbol{x}, \boldsymbol{y}) P(\boldsymbol{x}, \boldsymbol{y})}{P(\boldsymbol{z}, \boldsymbol{u})} \propto \underbrace{P(\boldsymbol{z}, \boldsymbol{u} \mid \boldsymbol{x}, \boldsymbol{y})}_{\text {似然 }} \underbrace{P(\boldsymbol{x}, \boldsymbol{y})}_{\text {先验 }} .
+    $$
 
-    -   求解最大后验概率, 等价于最大化似然和先验的乘积
-        $$
-        (\boldsymbol{x}, \boldsymbol{y})^{*}{ }_{\text {MAP }}=\arg \max P(\boldsymbol{x}, \boldsymbol{y} \mid \boldsymbol{z}, \boldsymbol{u})=\arg \max P(\boldsymbol{z}, \boldsymbol{u} \mid \boldsymbol{x}, \boldsymbol{y}) P(\boldsymbol{x}, \boldsymbol{y})
-        $$
+-   **求解最大后验概率, 等价于最大化似然和先验的乘积**
+    $$
+    (\boldsymbol{x}, \boldsymbol{y})^{*}{ }_{\text {MAP }}=\arg \max P(\boldsymbol{x}, \boldsymbol{y} \mid \boldsymbol{z}, \boldsymbol{u})=\arg \max P(\boldsymbol{z}, \boldsymbol{u} \mid \boldsymbol{x}, \boldsymbol{y}) P(\boldsymbol{x}, \boldsymbol{y})
+    $$
 
-    -   如果没有机器人位姿或路标, 则没有了先验, 此时可以求解最大似然估计 (MLE, Maximize Likelihood Estimation), 即 "在什么样的状态下, 最可能产生现在观测到的数据"
-        $$
-        (\boldsymbol{x}, \boldsymbol{y})^{*}{ }_{\mathrm{MLE}}=\arg \max P(\boldsymbol{z}, \boldsymbol{u} \mid \boldsymbol{x}, \boldsymbol{y})
-        $$
+-   如果没有机器人位姿或路标, 则没有了先验, 此时可以求解最大似然估计 (MLE, Maximize Likelihood Estimation), 即 "**在什么样的状态下, 最可能产生现在观测到的数据**"
+    $$
+    (\boldsymbol{x}, \boldsymbol{y})^{*}{ }_{\mathrm{MLE}}=\arg \max P(\boldsymbol{z}, \boldsymbol{u} \mid \boldsymbol{x}, \boldsymbol{y})
+    $$
 
 
 
--   最小二乘法求解最大似然估计
+#### 最小二乘法求解最大似然估计
 
-    -   观测模型
-        $$
-        \boldsymbol{z}_{k, j}=h\left(\boldsymbol{y}_{j}, \boldsymbol{x}_{k}\right)+\boldsymbol{v}_{k, j},
-        $$
+-   观测模型，第k次观测，第j个观测目标
+    $$
+    \boldsymbol{z}_{k, j}=h\left(\boldsymbol{y}_{j}, \boldsymbol{x}_{k}\right)+\boldsymbol{v}_{k, j},
+    $$
 
-    -   假设噪声项符合高斯分布 $\boldsymbol{v}_{k} \sim \mathcal{N}\left(\mathbf{0}, \boldsymbol{Q}_{k, j}\right)$
+-   假设噪声项符合高斯分布 $\boldsymbol{v}_{k} \sim \mathcal{N}\left(\mathbf{0}, \boldsymbol{Q}_{k, j}\right)$
 
-    -   观测数据的条件概率依然是高斯分布
-        $$
-        P\left(\boldsymbol{z}_{j, k} \mid \boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)=N\left(h\left(\boldsymbol{y}_{j}, \boldsymbol{x}_{k}\right), \boldsymbol{Q}_{k, j}\right)
-        $$
+-   观测数据的条件概率依然是高斯分布
+    $$
+    P\left(\boldsymbol{z}_{j, k} \mid \boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)=N\left(h\left(\boldsymbol{y}_{j}, \boldsymbol{x}_{k}\right), \boldsymbol{Q}_{k, j}\right)
+    $$
 
-    -   高斯分布的概率密度函数
-        $$
-        P(\boldsymbol{x})=\frac{1}{\sqrt{(2 \pi)^{N} \operatorname{det}(\boldsymbol{\Sigma})}} \exp \left(-\frac{1}{2}(\boldsymbol{x}-\boldsymbol{\mu})^{\mathrm{T}} \boldsymbol{\Sigma}^{-1}(\boldsymbol{x}-\boldsymbol{\mu})\right)
-        $$
+-   高斯分布的概率密度函数
+    $$
+    P(\boldsymbol{x})=\frac{1}{\sqrt{(2 \pi)^{N} \operatorname{det}(\boldsymbol{\Sigma})}} \exp \left(-\frac{1}{2}(\boldsymbol{x}-\boldsymbol{\mu})^{\mathrm{T}} \boldsymbol{\Sigma}^{-1}(\boldsymbol{x}-\boldsymbol{\mu})\right)
+    $$
 
-    -   对其取负对数
-        $$
-        -\ln (P(\boldsymbol{x}))=\frac{1}{2} \ln \left((2 \pi)^{N} \operatorname{det}(\boldsymbol{\Sigma})\right)+\frac{1}{2}(\boldsymbol{x}-\boldsymbol{\mu})^{\mathrm{T}} \boldsymbol{\Sigma}^{-1}(\boldsymbol{x}-\boldsymbol{\mu})
-        $$
+-   对其取负对数
+    $$
+    -\ln (P(\boldsymbol{x}))=\frac{1}{2} \ln \left((2 \pi)^{N} \operatorname{det}(\boldsymbol{\Sigma})\right)+\frac{1}{2}(\boldsymbol{x}-\boldsymbol{\mu})^{\mathrm{T}} \boldsymbol{\Sigma}^{-1}(\boldsymbol{x}-\boldsymbol{\mu})
+    $$
 
-    -   对数函数单调递增, 所以对原函数求最大化, 即对负对数求最小化. 上式中第一项与 $\boldsymbol{x}$ 无关, 只要最小化右侧的二次型项, 就得到状态的最大似然估计. 这里等价于最小化噪声项误差的一个二次型, 为马式距离, 也可以理解为由 $\boldsymbol{Q}_{k, j}^{-1}$ 加权后的欧氏距离.
-        $$
-        \begin{aligned}
-        \left(\boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)^{*} &=\arg \max \mathcal{N}\left(h\left(\boldsymbol{y}_{j}, \boldsymbol{x}_{k}\right), \boldsymbol{Q}_{k, j}\right) \\
-        &=\arg \min \left(\left(\boldsymbol{z}_{k, j}-h\left(\boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)\right)^{\mathrm{T}} \boldsymbol{Q}_{k, j}^{-1}\left(\boldsymbol{z}_{k, j}-h\left(\boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)\right)\right)
-        \end{aligned}
-        $$
+-   对数函数单调递增, 所以对原函数求最大化, 即对负对数求最小化. 上式中第一项与 $\boldsymbol{x}$ 无关, 只要最小化右侧的二次型项, 就得到状态的最大似然估计. 这里等价于最小化噪声项误差的一个二次型, 为马式距离, 也可以理解为由 $\boldsymbol{Q}_{k, j}^{-1}$ 加权后的欧氏距离.
+    $$
+    \begin{aligned}
+    \left(\boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)^{*} &=\arg \max \mathcal{N}\left(h\left(\boldsymbol{y}_{j}, \boldsymbol{x}_{k}\right), \boldsymbol{Q}_{k, j}\right) \\
+    &=\arg \min \left(\left(\boldsymbol{z}_{k, j}-h\left(\boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)\right)^{\mathrm{T}} \boldsymbol{Q}_{k, j}^{-1}\left(\boldsymbol{z}_{k, j}-h\left(\boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)\right)\right)
+    \end{aligned}
+    $$
 
-    -   假设各个时刻的运动输入和观测互相独立
-        $$
-        P(\boldsymbol{z}, \boldsymbol{u} \mid \boldsymbol{x}, \boldsymbol{y})=\prod_{k} P\left(\boldsymbol{u}_{k} \mid \boldsymbol{x}_{k-1}, \boldsymbol{x}_{k}\right) \prod_{k, j} P\left(\boldsymbol{z}_{k, j} \mid \boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)
-        $$
+-   假设各个时刻的运动输入和观测互相独立
+    $$
+    P(\boldsymbol{z}, \boldsymbol{u} \mid \boldsymbol{x}, \boldsymbol{y})=\prod_{k} P\left(\boldsymbol{u}_{k} \mid \boldsymbol{x}_{k-1}, \boldsymbol{x}_{k}\right) \prod_{k, j} P\left(\boldsymbol{z}_{k, j} \mid \boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)
+    $$
 
-    -   定义每次输入和观测数据与模型之间的误差
-        $$
-        \begin{aligned}
-        \boldsymbol{e}_{\boldsymbol{u}, k} &=\boldsymbol{x}_{k}-f\left(\boldsymbol{x}_{k-1}, \boldsymbol{u}_{k}\right) \\
-        \boldsymbol{e}_{\boldsymbol{z}, j, k} &=\boldsymbol{z}_{k, j}-h\left(\boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)
-        \end{aligned}
-        $$
+-   定义每次输入和观测数据与模型之间的误差
+    $$
+    \begin{aligned}
+    \boldsymbol{e}_{\boldsymbol{u}, k} &=\boldsymbol{x}_{k}-f\left(\boldsymbol{x}_{k-1}, \boldsymbol{u}_{k}\right) \\
+    \boldsymbol{e}_{\boldsymbol{z}, j, k} &=\boldsymbol{z}_{k, j}-h\left(\boldsymbol{x}_{k}, \boldsymbol{y}_{j}\right)
+    \end{aligned}
+    $$
 
-    -   最小化所有时刻估计值与真实读书之间的马式距离, 等价于求最大似然估计. 这里负对数允许我们把乘积变成求和, 由此变成一个最小二乘问题 (Least Square Problem)
-        $$
-        \min J(\boldsymbol{x}, \boldsymbol{y})=\sum_{k} \boldsymbol{e}_{\boldsymbol{u}, k}^{\mathrm{T}} \boldsymbol{R}_{k}^{-1} \boldsymbol{e}_{\boldsymbol{u}, k}+\sum_{k} \sum_{j} \boldsymbol{e}_{\boldsymbol{z}, k, j}^{\mathrm{T}} \boldsymbol{Q}_{k, j}^{-1} \boldsymbol{e}_{\boldsymbol{z}, k, j}
-        $$
+-   最小化所有时刻估计值与真实读数之间的马式距离, 等价于求最大似然估计. 这里负对数允许我们把乘积变成求和, 由此变成一个最小二乘问题 (Least Square Problem)
+    $$
+    \min J(\boldsymbol{x}, \boldsymbol{y})=\sum_{k} \boldsymbol{e}_{\boldsymbol{u}, k}^{\mathrm{T}} \boldsymbol{R}_{k}^{-1} \boldsymbol{e}_{\boldsymbol{u}, k}+\sum_{k} \sum_{j} \boldsymbol{e}_{\boldsymbol{z}, k, j}^{\mathrm{T}} \boldsymbol{Q}_{k, j}^{-1} \boldsymbol{e}_{\boldsymbol{z}, k, j}
+    $$
 
-    -   SLAM中最小二乘问题的特点
+-   SLAM中最小二乘问题的特点
 
-        -   目标函数由许多简单的加权误差项二次型组成
-        -   如果用李代数表示增量, 该问题为无约束的最小二乘问题. 如果用旋转矩阵, 则要考虑旋转矩阵自身的约束比如 $\boldsymbol{R}^{\mathrm{T}} \boldsymbol{R}=\boldsymbol{I}$ 且 $\operatorname{det}(\boldsymbol{R})=1$
-        -   误差分布将影响每个误差项在整个问题中的权重, 比如某次观测非常准确, 那么该误差项会在问题中占有较高的权重
+    -   目标函数由许多简单的加权误差项二次型组成
+    -   如果用李代数表示增量, 该问题为无约束的最小二乘问题. 如果用旋转矩阵, 则要考虑旋转矩阵自身的约束比如 $\boldsymbol{R}^{\mathrm{T}} \boldsymbol{R}=\boldsymbol{I}$ 且 $\operatorname{det}(\boldsymbol{R})=1$
+    -   误差分布将影响每个误差项在整个问题中的权重, 比如某次观测非常准确, 那么该误差项会在问题中占有较高的权重
 
--   批量状态估计的简单例子: 沿x轴前进或后退的汽车
 
-    -   运动方程和观测方程
 
-        -   $\boldsymbol{x}_k$ 为汽车在k时刻在x轴上的位置
-        -   $\boldsymbol{u}_k$ 为运动输入
-        -   $\boldsymbol{w}_k$ 为运动噪声
-        -   $\boldsymbol{z}_k$ 为对汽车位置在k时刻的测量
-        -   $\boldsymbol{n}_k$ 为测量噪声
+#### 批量状态估计的简单例子: 沿x轴前进或后退的汽车
 
-        $$
-        \begin{array}{ll}
-        \boldsymbol{x}_{k}=\boldsymbol{x}_{k-1}+\boldsymbol{u}_{k}+\boldsymbol{w}_{k}, & \boldsymbol{w}_{k} \sim \mathcal{N}\left(0, \boldsymbol{Q}_{k}\right) \\
-        \boldsymbol{z}_{k}=\boldsymbol{x}_{k}+\boldsymbol{n}_{k}, & \boldsymbol{n}_{k} \sim \mathcal{N}\left(0, \boldsymbol{R}_{k}\right)
-        \end{array}
-        $$
+-   运动方程和观测方程
 
-        -   批量状态变量: $\boldsymbol{x}=\left[\boldsymbol{x}_{0}, \boldsymbol{x}_{1}, \boldsymbol{x}_{2}, \boldsymbol{x}_{3}\right]^{\mathrm{T}}$
-        -   批量观测: $\boldsymbol{z}=\left[\boldsymbol{z}_{1}, \boldsymbol{z}_{2}, \boldsymbol{z}_{3}\right]^{\mathrm{T}}$
-        -   批量运动输入: $\boldsymbol{u}=\left[\boldsymbol{u}_{1}, \boldsymbol{u}_{2}, \boldsymbol{u}_{3}\right]^{\mathrm{T}}$
+    -   $\boldsymbol{x}_k$ 为汽车在k时刻在x轴上的位置
+    -   $\boldsymbol{u}_k$ 为运动输入
+    -   $\boldsymbol{w}_k$ 为运动噪声
+    -   $\boldsymbol{z}_k$ 为对汽车位置在k时刻的测量
+    -   $\boldsymbol{n}_k$ 为测量噪声
 
-    -   最大似然估计为
-        $$
-        \begin{aligned}
-        \boldsymbol{x}_{\text {map }}^{*} &=\arg \max P(\boldsymbol{x} \mid \boldsymbol{u}, \boldsymbol{z})=\arg \max P(\boldsymbol{u}, \boldsymbol{z} \mid \boldsymbol{x}) \\
-        &=\prod_{k=1}^{3} P\left(\boldsymbol{u}_{k} \mid \boldsymbol{x}_{k-1}, \boldsymbol{x}_{k}\right) \prod_{k=1}^{3} P\left(\boldsymbol{z}_{k} \mid \boldsymbol{x}_{k}\right)
-        \end{aligned}
-        $$
+    $$
+    \begin{array}{ll}
+    \boldsymbol{x}_{k}=\boldsymbol{x}_{k-1}+\boldsymbol{u}_{k}+\boldsymbol{w}_{k}, & \boldsymbol{w}_{k} \sim \mathcal{N}\left(0, \boldsymbol{Q}_{k}\right) \\
+    \boldsymbol{z}_{k}=\boldsymbol{x}_{k}+\boldsymbol{n}_{k}, & \boldsymbol{n}_{k} \sim \mathcal{N}\left(0, \boldsymbol{R}_{k}\right)
+    \end{array}
+    $$
 
-        -   运动方程的似然概率
-            $$
-            P\left(\boldsymbol{u}_{k} \mid \boldsymbol{x}_{k-1}, \boldsymbol{x}_{k}\right)=\mathcal{N}\left(\boldsymbol{x}_{k}-\boldsymbol{x}_{k-1}, \boldsymbol{Q}_{k}\right)
-            $$
+    -   批量状态变量: $\boldsymbol{x}=\left[\boldsymbol{x}_{0}, \boldsymbol{x}_{1}, \boldsymbol{x}_{2}, \boldsymbol{x}_{3}\right]^{\mathrm{T}}$
+    -   批量观测: $\boldsymbol{z}=\left[\boldsymbol{z}_{1}, \boldsymbol{z}_{2}, \boldsymbol{z}_{3}\right]^{\mathrm{T}}$
+    -   批量运动输入: $\boldsymbol{u}=\left[\boldsymbol{u}_{1}, \boldsymbol{u}_{2}, \boldsymbol{u}_{3}\right]^{\mathrm{T}}$
 
-        -   观测方程的似然概率
-            $$
-            P\left(\boldsymbol{z}_{k} \mid \boldsymbol{x}_{k}\right)=\mathcal{N}\left(\boldsymbol{x}_{k}, \boldsymbol{R}_{k}\right) .
-            $$
+-   最大似然估计为
+    $$
+    \begin{aligned}
+    \boldsymbol{x}_{\text {map }}^{*} &=\arg \max P(\boldsymbol{x} \mid \boldsymbol{u}, \boldsymbol{z})=\arg \max P(\boldsymbol{u}, \boldsymbol{z} \mid \boldsymbol{x}) \\
+    &=\prod_{k=1}^{3} P\left(\boldsymbol{u}_{k} \mid \boldsymbol{x}_{k-1}, \boldsymbol{x}_{k}\right) \prod_{k=1}^{3} P\left(\boldsymbol{z}_{k} \mid \boldsymbol{x}_{k}\right)
+    \end{aligned}
+    $$
 
-        -   误差变量
-            $$
-            \begin{align}
-            \boldsymbol{e}_{\boldsymbol{u}, k} &= \boldsymbol{x}_{k}-\boldsymbol{x}_{k-1}-\boldsymbol{u}_{k}, \\
-            
-            \boldsymbol{e}_{z, k} &= \boldsymbol{z}_{k}-\boldsymbol{x}_{k}
-            \end{align}
-            $$
+-   运动方程的似然概率
+    $$
+    P\left(\boldsymbol{u}_{k} \mid \boldsymbol{x}_{k-1}, \boldsymbol{x}_{k}\right)=\mathcal{N}\left(\boldsymbol{x}_{k}-\boldsymbol{x}_{k-1}, \boldsymbol{Q}_{k}\right)
+    $$
 
-        -   最小二乘的目标函数
-            $$
-            \min \sum_{k=1}^{3} \boldsymbol{e}_{\boldsymbol{u}, k}^{\mathrm{T}} \boldsymbol{Q}_{k}^{-1} \boldsymbol{e}_{\boldsymbol{u}, k}+\sum_{k=1}^{3} \boldsymbol{e}_{\boldsymbol{z}, k}^{\mathrm{T}} \boldsymbol{R}_{k}^{-1} \boldsymbol{e}_{z, k}
-            $$
+-   观测方程的似然概率
+    $$
+    P\left(\boldsymbol{z}_{k} \mid \boldsymbol{x}_{k}\right)=\mathcal{N}\left(\boldsymbol{x}_{k}, \boldsymbol{R}_{k}\right) .
+    $$
 
-        -   由于该系统是线性的, 很容易写成向量形式, 定义 $\boldsymbol{y}=[\boldsymbol{u}, \boldsymbol{z}]^{\mathrm{T}}$, 写出矩阵 $\boldsymbol{H}$, 使得:
-            $$
-            \begin{align}
-            \boldsymbol{y}-\boldsymbol{H} \boldsymbol{x} &= 
-            \boldsymbol{e} \sim \mathcal{N}(\mathbf{0}, \boldsymbol{\Sigma})
-            
-            \\
-            \\
-            
-            \boldsymbol{H} &= \left[\begin{array}{cccc}
-            1 & -1 & 0 & 0 \\
-            0 & 1 & -1 & 0 \\
-            0 & 0 & 1 & -1 \\
-            0 & 1 & 0 & 0 \\
-            0 & 0 & 1 & 0 \\
-            0 & 0 & 0 & 1
-            \end{array}\right],
-            
-            \\
-            \\
-            
-            \boldsymbol{\Sigma} &= \operatorname{diag}\left(\boldsymbol{Q}_{1}, \boldsymbol{Q}_{2}, \boldsymbol{Q}_{3}, \boldsymbol{R}_{1}, \boldsymbol{R}_{2}, \boldsymbol{R}_{3}\right)
-            
-            
-            \end{align}
-            $$
+-   误差变量
+    $$
+    \begin{align}
+    \boldsymbol{e}_{\boldsymbol{u}, k} &= \boldsymbol{x}_{k}-\boldsymbol{x}_{k-1}-\boldsymbol{u}_{k}, \\
+    
+    \boldsymbol{e}_{z, k} &= \boldsymbol{z}_{k}-\boldsymbol{x}_{k}
+    \end{align}
+    $$
 
-        -   整个问题可以写成
-            $$
-            \boldsymbol{x}_{\text {map }}^{*}=\arg \min \boldsymbol{e}^{\mathrm{T}} \boldsymbol{\Sigma}^{-1} \boldsymbol{e}
-            
-            \\
-            $$
+-   最小二乘的目标函数
+    $$
+    \min \sum_{k=1}^{3} \boldsymbol{e}_{\boldsymbol{u}, k}^{\mathrm{T}} \boldsymbol{Q}_{k}^{-1} \boldsymbol{e}_{\boldsymbol{u}, k}+\sum_{k=1}^{3} \boldsymbol{e}_{\boldsymbol{z}, k}^{\mathrm{T}} \boldsymbol{R}_{k}^{-1} \boldsymbol{e}_{z, k}
+    $$
 
-        -   唯一解
-            $$
-            \boldsymbol{x}_{\text {map }}^{*}=\left(\boldsymbol{H}^{\mathrm{T}} \boldsymbol{\Sigma}^{-1} \boldsymbol{H}\right)^{-1} \boldsymbol{H}^{\mathrm{T}} \boldsymbol{\Sigma}^{-1} \boldsymbol{y} .
-            $$
+-   由于该系统是线性的, 很容易写成向量形式, 定义 $\boldsymbol{y}=[\boldsymbol{u}, \boldsymbol{z}]^{\mathrm{T}}$, 写出矩阵 $\boldsymbol{H}$, 使得:
+    $$
+    \begin{align}
+    \boldsymbol{y}-\boldsymbol{H} \boldsymbol{x} &= 
+    \boldsymbol{e} \sim \mathcal{N}(\mathbf{0}, \boldsymbol{\Sigma})
+    
+    \\
+    \\
+    
+    \boldsymbol{H} &= \left[\begin{array}{cccc}
+    1 & -1 & 0 & 0 \\
+    0 & 1 & -1 & 0 \\
+    0 & 0 & 1 & -1 \\
+    0 & 1 & 0 & 0 \\
+    0 & 0 & 1 & 0 \\
+    0 & 0 & 0 & 1
+    \end{array}\right],
+    
+    \\
+    \\
+    
+    \boldsymbol{\Sigma} &= \operatorname{diag}\left(\boldsymbol{Q}_{1}, \boldsymbol{Q}_{2}, \boldsymbol{Q}_{3}, \boldsymbol{R}_{1}, \boldsymbol{R}_{2}, \boldsymbol{R}_{3}\right)
+    
+    
+    \end{align}
+    $$
+
+-   整个问题可以写成
+    $$
+    \boldsymbol{x}_{\text {map }}^{*}=\arg \min \boldsymbol{e}^{\mathrm{T}} \boldsymbol{\Sigma}^{-1} \boldsymbol{e}
+    
+    \\
+    $$
+
+-   唯一解
+    $$
+    \boldsymbol{x}_{\text {map }}^{*}=\left(\boldsymbol{H}^{\mathrm{T}} \boldsymbol{\Sigma}^{-1} \boldsymbol{H}\right)^{-1} \boldsymbol{H}^{\mathrm{T}} \boldsymbol{\Sigma}^{-1} \boldsymbol{y} .
+    $$
 
 
 
@@ -263,7 +270,7 @@ $$
 
 
 
-#### 一阶和二阶梯度法
+#### 一阶和二阶牛顿梯度法
 
 现在考虑第 $k$ 次迭代, 假设我们在 $\boldsymbol{x}_{k}$ 处, 想要寻到增量 $\Delta \boldsymbol{x}_{k}$, 那么最直观的方式是将目标函数在 $x_{k}$ 附近进行泰勒展开:
 $$
@@ -330,7 +337,7 @@ $$
     \boldsymbol{H} \Delta \boldsymbol{x}=\boldsymbol{g}
     $$
 
--   这里把左侧记作 $\boldsymbol{H}$ 是有意义的。对比牛顿法可见, 高斯牛顿法用 $\boldsymbol{J} \boldsymbol{J}^{\mathrm{T}}$ 作为牛顿法中二阶 Hessian 矩阵的近似, 从而省略了计算 $\boldsymbol{H}$ 的过程。求解增量方程是整个优化问题的核心所在.
+-   这里把左侧记作 $\boldsymbol{H}$ 是有意义的。对比牛顿法可见, **高斯牛顿法用 $\boldsymbol{J} \boldsymbol{J}^{\mathrm{T}}$ 作为牛顿法中二阶 Hessian 矩阵的近似**, 从而省略了计算 $\boldsymbol{H}$ 的过程。求解增量方程是整个优化问题的核心所在.
 
 -   高斯牛顿步骤
 
@@ -345,7 +352,7 @@ $$
     -   原函数在这个点的局部近似不像二次函数
     -   如果 $\Delta \boldsymbol{x}$ 步长太大, 也会导致局部近似不够准确.
     -   一些线搜索法加入了步长 $\alpha$ 
-    -   列文伯格一马夸尔特方法在一定程度上修正了这些问题, 一般认为它比高斯牛顿法更加健壮, 但它的收玫速度可能比高斯牛顿法更慢, 被称为阻尼牛顿法
+    -   列文伯格一马夸尔特方法在一定程度上修正了这些问题, 一般认为它比高斯牛顿法更加健壮, 但它的收敛速度可能比高斯牛顿法更慢, 被称为阻尼牛顿法
 
 
 
@@ -444,14 +451,30 @@ $$
 
 -   高斯牛顿法的增量方程为
     $$
+    \underbrace{\boldsymbol{J}(\boldsymbol{x}) \boldsymbol{J}^{\mathrm{T}}}_{\boldsymbol{H}(\boldsymbol{x})}(\boldsymbol{x}) \Delta \boldsymbol{x}=\underbrace{-\boldsymbol{J}(\boldsymbol{x}) f(\boldsymbol{x})}_{\boldsymbol{g}(\boldsymbol{x})} 
+    
+    \\
+    \\
+    
     \left(\sum_{i=1}^{100} \boldsymbol{J}_{i}\left(\sigma^{2}\right)^{-1} \boldsymbol{J}_{i}^{\mathrm{T}}\right) \Delta \boldsymbol{x}_{k}=\sum_{i=1}^{100}-\boldsymbol{J}_{i}\left(\sigma^{2}\right)^{-1} e_{i}
     $$
-
--   求解 $\boldsymbol{A}\boldsymbol{x} = \boldsymbol{b}$
+    
+-   求解 $\boldsymbol{A}\boldsymbol{x} = \boldsymbol{b}$ 问题（参考reference中的资料）
 
     -   LU分解, 求解 $\boldsymbol{L}\boldsymbol{U}\boldsymbol{x} = \boldsymbol{b}$
+        -   把一个方阵A分解成下三角阵和上三角阵的乘积，即是LU分解
+        -   高斯消元法，逐步把矩阵A进行拆分
+        -   不稳定的风险
     -   LUP分解, 求解 $\boldsymbol{L}\boldsymbol{U}\boldsymbol{P}\boldsymbol{x} = \boldsymbol{b}$
-    -   Cholesky分解, 当A是SPD 对称正定矩阵时, 求解 $\boldsymbol{L}\boldsymbol{L}^{\text{T}}\boldsymbol{x} = \boldsymbol{b}$ 
+        -   在高斯消元的时候，做一些行置换（pivoting）
+        -   比LU分解更稳定
+    -   Cholesky分解
+        -   当A是SPD 对称正定矩阵时，$U = L^{\mathrm{T}}$  求解 $\boldsymbol{L}\boldsymbol{L}^{\text{T}}\boldsymbol{x} = \boldsymbol{b}$ 
+        -   满足条件时，求解稳定
+    -   QR分解
+        -   CGS
+        -   MGS
+        -   Householeder变换。
 
 
 

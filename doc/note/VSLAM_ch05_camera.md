@@ -2,9 +2,7 @@
 
 ## 第五讲 - 相机与图像
 
-### 相机模型
-
-#### 针孔相机模型
+### 针孔相机模型
 
 - 相机内参矩阵 $\boldsymbol{K}$:
 
@@ -40,7 +38,7 @@ $$
     \left(\boldsymbol{R} \boldsymbol{P}_{\mathrm{w}}+\boldsymbol{t}\right)=\underbrace{[X, Y, Z]^{\mathrm{T}}}_{\text {相机坐标 }} \rightarrow \underbrace{[X / Z, Y / Z, 1]^{\mathrm{T}}}_{\text {归一化坐标 }} .
     $$
 
-#### 畸变模型
+### 畸变模型
 
 - 径向畸变
 
@@ -84,7 +82,7 @@ $$
 
         
 
-#### 双目相机模型
+### 双目相机模型
 
 <img src="VSLAM_ch05_camera.assets/image-20220707221244599.png" alt="image-20220707221244599" style="zoom:50%;" />
 $$
@@ -95,7 +93,7 @@ $$
 z=\frac{f b}{d}, \quad d \stackrel{\text { def }}{=} u_{\mathrm{L}}-u_{\mathrm{R}}
 $$
 
-#### RGB-D 相机模型
+### RGB-D 相机模型
 
 - 红外结构光 Structured light
     - Kinect Gen1
@@ -106,3 +104,14 @@ $$
 
 
 
+### CPP Demo
+
+-   imageBasics
+    -   imageBasics
+        -   本程序介绍了 OpenCV 的一些基本操作
+    -   undistortImage
+        -   本程序通过 OpenCV 对图像进行去畸变处理
+-   stereo
+    -   本程序通过一对左右相机图像，生成 SGBM 视差图，并变换到 3D 空间，通过点云显示。
+-   rgbd
+    -   本程序通过将5副彩色图对应的深度图结合他们的pose，计算并拼接点云，合成一个场景点云。

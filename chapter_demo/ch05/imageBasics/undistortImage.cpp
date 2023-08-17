@@ -5,6 +5,13 @@
 
 std::string image_file = "../../../../chapter_demo/ch05/imageBasics/distorted.png";  // 请确保路径正确
 
+/**
+ * @brief 本程序通过 OpenCV 对图像进行去畸变处理
+ *
+ * @param argc
+ * @param argv
+ * @return int
+ */
 int main(int argc, char **argv)
 {
     // 本程序实现去畸变部分的代码。尽管我们可以调用OpenCV的去畸变，但自己实现一遍有助于理解。

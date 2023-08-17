@@ -9,7 +9,7 @@
 std::string image_file = "../../../../chapter_demo/ch05/imageBasics/ubuntu.png";  // 请确保路径正确
 
 /**
- * @brief main
+ * @brief 本程序介绍了 OpenCV 的一些基本操作
  *
  * @param argc
  * @param argv

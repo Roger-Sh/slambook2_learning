@@ -17,7 +17,7 @@ std::string right_file = "../../../../chapter_demo/ch05/stereo/right.png";
 void showPointCloud(const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> &pointcloud);
 
 /**
- * @brief main
+ * @brief 本程序通过一对左右相机图像，生成 SGBM 视差图，并变换到 3D 空间，通过点云显示。
  *
  * @param argc
  * @param argv
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     cv::Mat left = cv::imread(left_file, 0);
     cv::Mat right = cv::imread(right_file, 0);
 
-    // SGBM法生成视差图
+    // SGBM法生成视差深度图
     cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32);  // 生成视差图所需参数
     cv::Mat disparity_sgbm, disparity;
     sgbm->compute(left, right, disparity_sgbm);
@@ -68,6 +68,7 @@ int main(int argc, char **argv)
     cv::imshow("left", left);
     cv::imshow("right", right);
     cv::waitKey(0);
+
     // 画出点云
     showPointCloud(pointcloud);
     return 0;

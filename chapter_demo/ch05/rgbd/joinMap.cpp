@@ -14,7 +14,7 @@ typedef Eigen::Matrix<double, 6, 1> Vector6d;
 void showPointCloud(const std::vector<Vector6d, Eigen::aligned_allocator<Vector6d>> &pointcloud);
 
 /**
- * @brief main
+ * @brief 本程序通过将5副彩色图对应的深度图结合他们的pose，计算并拼接点云，合成一个场景点云
  *
  * @param argc
  * @param argv
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     std::vector<cv::Mat> colorImgs, depthImgs;  // 彩色图和深度图
     TrajectoryType poses;                       // 相机位姿
 
-    // check fin
+    // check file
     std::ifstream fin("../../../../chapter_demo/ch05/rgbd/pose.txt");
     if (!fin)
     {
@@ -37,16 +37,19 @@ int main(int argc, char **argv)
     // read image and pose
     for (int i = 0; i < 5; i++)
     {
+        // read image
         boost::format fmt("../../../../chapter_demo/ch05/rgbd/%s/%d.%s");  // 图像文件格式
         colorImgs.push_back(cv::imread((fmt % "color" % (i + 1) % "png").str()));
         depthImgs.push_back(cv::imread((fmt % "depth" % (i + 1) % "pgm").str(), -1));  // 使用-1读取原始图像
 
+        // read pose x y z q1 q2 q3 q4
         double data[7] = {0};
         for (auto &d : data)
         {
             fin >> d;
         }
 
+        // create SE3 from pose
         Sophus::SE3d pose(Eigen::Quaterniond(data[6], data[3], data[4], data[5]), Eigen::Vector3d(data[0], data[1], data[2]));
         poses.push_back(pose);
     }
@@ -72,7 +75,8 @@ int main(int argc, char **argv)
         for (int v = 0; v < color.rows; v++)
             for (int u = 0; u < color.cols; u++)
             {
-                unsigned int d = depth.ptr<unsigned short>(v)[u];  // 深度值
+                // 深度值
+                unsigned int d = depth.ptr<unsigned short>(v)[u];
 
                 // 为0表示没有测量到
                 if (d == 0)
@@ -89,11 +93,14 @@ int main(int argc, char **argv)
                 // 计算世界坐标
                 Eigen::Vector3d pointWorld = T * point;
 
+                // 获取颜色信息
                 Vector6d p;
                 p.head<3>() = pointWorld;
                 p[5] = color.data[v * color.step + u * color.channels()];      // blue
                 p[4] = color.data[v * color.step + u * color.channels() + 1];  // green
                 p[3] = color.data[v * color.step + u * color.channels() + 2];  // red
+
+                // 加入点云
                 pointcloud.push_back(p);
             }
     }
