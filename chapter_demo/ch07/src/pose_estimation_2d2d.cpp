@@ -13,7 +13,7 @@ std::string img1_path = "../../../chapter_demo/ch07/image/1.png";
 std::string img2_path = "../../../chapter_demo/ch07/image/2.png";
 
 /**
- * @brief match ORB feature points
+ * @brief 匹配ORB特征点
  *
  * @param img_1
  * @param img_2
@@ -54,7 +54,7 @@ void pose_estimation_2d2d(
 cv::Point2d pixel2cam(const cv::Point2d &p, const cv::Mat &K);
 
 /**
- * @brief main, 2d-2d pose estimation using ORB feature points
+ * @brief 本程序演示了如何使用2D-2D的特征匹配估计相机运动
  *
  * @param argc
  * @param argv
@@ -62,22 +62,22 @@ cv::Point2d pixel2cam(const cv::Point2d &p, const cv::Mat &K);
  */
 int main(int argc, char **argv)
 {
-    //-- 读取图像
+    // 读取图像
     cv::Mat img_1 = cv::imread(img1_path, CV_LOAD_IMAGE_COLOR);
     cv::Mat img_2 = cv::imread(img2_path, CV_LOAD_IMAGE_COLOR);
     assert(img_1.data && img_2.data && "Can not load images!");
 
-    // match ORB features
+    // 匹配 ORB features
     std::vector<cv::KeyPoint> keypoints_1, keypoints_2;
     std::vector<cv::DMatch> matches;
     find_ORB_feature_matches(img_1, img_2, keypoints_1, keypoints_2, matches);
     std::cout << "一共找到了" << matches.size() << "组匹配点" << std::endl;
 
-    //-- 估计两张图像间运动
+    // 估计两张图像间运动
     cv::Mat R, t;
     pose_estimation_2d2d(keypoints_1, keypoints_2, matches, R, t);
 
-    //-- 验证E=t^R*scale
+    // 验证 E=t^R*scale
     cv::Mat t_x =
         (cv::Mat_<double>(3, 3) << 0,
          -t.at<double>(2, 0),
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 
     std::cout << "t^R=" << std::endl << t_x * R << std::endl;
 
-    //-- 验证对极约束
+    // 验证对极约束
     cv::Mat K = (cv::Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
     for (cv::DMatch m : matches)
     {

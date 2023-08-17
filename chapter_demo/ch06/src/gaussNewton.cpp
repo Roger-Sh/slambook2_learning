@@ -1,29 +1,28 @@
-#include <iostream>
-#include <chrono>   // time
-#include <opencv2/opencv.hpp>
 #include <Eigen/Core>
 #include <Eigen/Dense>
-
+#include <chrono>  // time
+#include <iostream>
+#include <opencv2/opencv.hpp>
 
 /**
- * @brief gaussNewton
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ * @brief 本程序展示了手动实现高斯牛顿法求解非线性优化问题
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main(int argc, char **argv)
 {
     // 初始化参数列表
-    double ar = 1.0, br = 2.0, cr = 1.0;    // 真实参数值
-    double ae = 2.0, be = -1.0, ce = 5.0;   // 初始估计参数值
+    double ar = 1.0, br = 2.0, cr = 1.0;   // 真实参数值
+    double ae = 2.0, be = -1.0, ce = 5.0;  // 初始估计参数值
 
     // 初始化数据噪声
-    int N = 100;                            // 数据点
-    double w_sigma = 1.0;                   // 噪声Sigma值
-    double inv_sigma = 1.0 / w_sigma;       // 噪声倒数
-    cv::RNG rng;                            // OpenCV随机数产生器
-    std::vector<double> x_data, y_data; // 数据
+    int N = 100;                         // 数据点
+    double w_sigma = 1.0;                // 噪声Sigma值
+    double inv_sigma = 1.0 / w_sigma;    // 噪声倒数
+    cv::RNG rng;                         // OpenCV随机数产生器
+    std::vector<double> x_data, y_data;  // 数据
     for (int i = 0; i < N; i++)
     {
         double x = i / 100.0;
@@ -32,32 +31,32 @@ int main(int argc, char **argv)
     }
 
     // 开始Gauss-Newton迭代
-    int iterations = 100;          // 迭代次数
-    double cost = 0, lastCost = 0; // 本次迭代的cost和上一次迭代的cost
-    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();    // timer
+    int iterations = 500;                                                         // 迭代次数
+    double cost = 0, lastCost = 0;                                                // 本次迭代的cost和上一次迭代的cost
+    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();  // timer
     for (int iter = 0; iter < iterations; iter++)
     {
         // init H, b
-        Eigen::Matrix3d H = Eigen::Matrix3d::Zero(); // Hessian = J^T W^{-1} J in Gauss-Newton
-        Eigen::Vector3d b = Eigen::Vector3d::Zero(); // bias
+        Eigen::Matrix3d H = Eigen::Matrix3d::Zero();  // Hessian = J^T W^{-1} J in Gauss-Newton
+        Eigen::Vector3d b = Eigen::Vector3d::Zero();  // bias
         cost = 0;
 
         for (int i = 0; i < N; i++)
         {
             // 第i个数据点
-            double xi = x_data[i], yi = y_data[i]; 
-            
+            double xi = x_data[i], yi = y_data[i];
+
             // 当前模型的误差
             double error = yi - exp(ae * xi * xi + be * xi + ce);
-            
+
             // 雅可比矩阵
-            Eigen::Vector3d J;                                  
-            J[0] = -xi * xi * exp(ae * xi * xi + be * xi + ce); // de/da
-            J[1] = -xi * exp(ae * xi * xi + be * xi + ce);      // de/db
-            J[2] = -exp(ae * xi * xi + be * xi + ce);           // de/dc
+            Eigen::Vector3d J;
+            J[0] = -xi * xi * exp(ae * xi * xi + be * xi + ce);  // de/da
+            J[1] = -xi * exp(ae * xi * xi + be * xi + ce);       // de/db
+            J[2] = -exp(ae * xi * xi + be * xi + ce);            // de/dc
 
             // update H, b
-            H += inv_sigma * inv_sigma * J * J.transpose();     
+            H += inv_sigma * inv_sigma * J * J.transpose();
             b += -inv_sigma * inv_sigma * error * J;
 
             // update cost
@@ -87,13 +86,13 @@ int main(int argc, char **argv)
         // update lastcost
         lastCost = cost;
 
-        std::cout << "total cost: " << cost << ", \t\tupdate: " << dx.transpose() << "\t\testimated params: " << ae << "," << be << "," << ce << std::endl;
+        std::cout << "total cost: " << cost << ", \t\tupdate: " << dx.transpose() << "\t\testimated params: " << ae << "," << be << "," << ce
+                  << std::endl;
     }
 
     std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
     std::cout << "solve time cost = " << time_used.count() << " seconds. " << std::endl;
-
     std::cout << "estimated abc = " << ae << ", " << be << ", " << ce << std::endl;
     return 0;
 }

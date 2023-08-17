@@ -4,7 +4,7 @@
 
 ### 7.1 特征点法 (以ORB特征为例)
 
-#### 特征点
+#### 特征点介绍
 
 -   特质
     -   可重复性
@@ -46,7 +46,7 @@ ORB特征的组成
             2.  非极大值抑制, 避免角点集中
         5.  循环以上四步, 对每一个像素执行相同的操作。
 
-    -   ![image-20220713181633028](VSLAM_ch07_visual_odometry_1.assets/image-20220713181633028.png)
+        ![image-20220713181633028](VSLAM_ch07_visual_odometry_1.assets/image-20220713181633028.png)
 
     -   针对FAST角点不具有方向性和尺度的问题, ORB添加了尺度和旋转的描述, 称为Orient FAST
 
@@ -79,6 +79,11 @@ ORB特征的组成
 
 -   匹配方式
     -   暴力匹配
+        -   测量两幅图所有特征点互相之间的描述子距离，然后排序取最近的点
+        -   描述子距离：两个特征之间的相似程度
+            -   欧氏距离
+            -   汉明距离
+                -   针对BRIEF这样二进制描述子，通过记录其不同位数的个数来描述两个特征之间的相似程度
     -   快速近似最近邻 (FLANN)
 -   匹配距离
     -   欧式距离
@@ -164,11 +169,11 @@ ORB特征的组成
 
     -    基础矩阵 $\boldsymbol{F}$ 和本质矩阵 $\boldsymbol{E}$
 
-         -   本质矩阵 $\boldsymbol{E} = \boldsymbol{t}^{\wedge}\boldsymbol{R}$ 
-         -   基础矩阵 $\boldsymbol{F} = \boldsymbol{K}^{-\text{T}}\boldsymbol{E}\boldsymbol{K}^{-1}$ 
+         -   本质矩阵（Essential Matrix） $\boldsymbol{E} = \boldsymbol{t}^{\wedge}\boldsymbol{R}$ 
+         -   基础矩阵（Fundamental Matrix） $\boldsymbol{F} = \boldsymbol{K}^{-\text{T}}\boldsymbol{E}\boldsymbol{K}^{-1}$ 
          -   对极约束 $\boldsymbol{x}_2^{\text{T}}\boldsymbol{E}\boldsymbol{x}_1 = \boldsymbol{p}_2^{\text{T}}\boldsymbol{F}\boldsymbol{p}_1 = 0$
 
-    -    相机位置估计问题步骤
+    -    对极约束求解相机位置估计问题步骤
 
          1.  根据配对点像素位置求出 $\boldsymbol{E}$ 或 $\boldsymbol{F}$
              1.  八点法
@@ -261,7 +266,7 @@ ORB特征的组成
         $$
         ![image-20220718093345417](VSLAM_ch07_visual_odometry_1.assets/image-20220718093345417.png)
 
-    -   只有第一种解中, $P$ 点的深度值在两个相机中都为正, 所以只有一个解
+    -   **只有第一种解中, $P$ 点的深度值在两个相机中都为正, 所以只有一个解**
 
     -   如果根据线性方程解出的 $\boldsymbol{E}$ 不满足其应有的内在性质, 即如果 $\boldsymbol{E}$ 的奇异值不为 $\sigma, \sigma, 0$ 的形式, 那么则对其奇异值矩阵 $\text{diag}(\sigma_1, \sigma_2, \sigma_3), \sigma_1 \geq \sigma_2 \geq \sigma_3$ 做如下处理
         $$
@@ -276,7 +281,7 @@ ORB特征的组成
 
 #### 单应矩阵 Homography Matrix
 
--   单应矩阵描述了两个平面之间的映射关系. 如果场景中的特征点在同一平面上, 则可以通过单应性进行运动估计
+-   **单应矩阵描述了两个平面之间的映射关系**. 如果场景中的特征点在同一平面上, 则可以通过单应性进行运动估计
 
 -   假设图像 $\boldsymbol{I}_1$, $\boldsymbol{I}_2$ 有一对匹配好的特征点 $p_1, p_2$, 对应平面 $P$ 上, 该平面满足方程
     $$
@@ -352,7 +357,7 @@ ORB特征的组成
 
 -   求解单应矩阵同样需要分解得到 $\boldsymbol{R}, \boldsymbol{t}$, 同时通过判断正的深度值和已知平面法向量来得到最终运动估计
 
--   当特征点共面或相机发生纯旋转时, 基础矩阵的自由度下降, 即退化现象, 噪声会对多余的自由度起到决定作用. 一般会同时估计基础矩阵 $\boldsymbol{F}$ 与 单应矩阵 $\boldsymbol{H}$, 选择重投影误差小的作为最终的运动估计矩阵
+-   **当特征点共面或相机发生纯旋转时, 基础矩阵的自由度下降, 即退化现象, 噪声会对多余的自由度起到决定作用**. 一般会同时估计基础矩阵 $\boldsymbol{F}$ 与 单应矩阵 $\boldsymbol{H}$, 选择重投影误差小的作为最终的运动估计矩阵
 
 
 
@@ -490,6 +495,11 @@ ORB特征的组成
 
 ####  P3P法
 
+-   P3P 需要三对 3D-2D 匹配点
+    -   3D点：ABC 世界坐标系中的坐标
+    -   2D点：abc 图像坐标系中的坐标
+    -   还需要一对验证点 D-d
+
 -   P3P 示意图
 
 ![image-20220725120713009](VSLAM_ch07_visual_odometry_1.assets/image-20220725120713009.png)
@@ -557,7 +567,7 @@ $$
 -   缺点
     -   P3P只能利用三个点的信息, 当配对点多于三组, 难以利用更多信息
     -   3D 或 2D点受噪声影响或误匹配, 算法失效
--   SLAM 中通过P3P/EPnP 估计相机位姿, 然后构建最小二乘优化问题进行优化, 即Bundle Adjustment
+-   SLAM 中通常通过P3P/EPnP 估计相机位姿, 然后构建最小二乘优化问题进行优化, 即**Bundle Adjustment**
 
 
 
@@ -589,7 +599,7 @@ $$
     \boldsymbol{e}(\boldsymbol{x}+\Delta \boldsymbol{x}) \approx \boldsymbol{e}(\boldsymbol{x}) + \boldsymbol{J}^{\mathrm{T}} \Delta \boldsymbol{x}
     $$
 
--   重投影误差项关于相机位姿李代数的导数 $\frac{\part \boldsymbol{e}}{\part{\delta \boldsymbol{\xi}}}$ 
+-   求重投影误差项关于相机位姿李代数的导数 $\frac{\part \boldsymbol{e}}{\part{\delta \boldsymbol{\xi}}}$ 
     $$
     \boldsymbol{P}^{\prime}=(\boldsymbol{T} \boldsymbol{P})_{1: 3}=\left[X^{\prime}, Y^{\prime}, Z^{\prime}\right]^{\mathrm{T}}
     
@@ -825,4 +835,26 @@ $$
 
 
 -   当深度已知时, 建模3D-3D误差, 当深度未知时, 建模3D-2D误差, 从而将3D-3D 与 3D-2D放在同一个优化问题中解决
+
+
+
+
+
+### CPP Demo
+
+-   orb_cv
+    -   本程序为通过 OpenCV 进行图像间的 Orb 特征点匹配
+-   orb_self
+    -   本程序为手写 Orb 特征点匹配
+-   pose_estimation_2d2d 
+    -   本程序演示了如何使用 2D-2D 对极几何 的特征匹配估计相机运动
+-   triangulation
+    -   本程序演示了通过 OpenCV 进行三角测量的方法
+-   pose_estimation_3d2d
+    -   本程序演示了通过三种方法 解决 3D-2D PnP BA 求解相机位姿问题
+        -   通过 OpenCV 求解 PnP
+        -   手写高斯牛顿法求解 PnP
+        -   使用 G2O 求解 PnP
+-   pose_estimation_3d3d
+    -   本程序演示了通过 ICP 法以及 非线性优化法（G2O）求解 
 

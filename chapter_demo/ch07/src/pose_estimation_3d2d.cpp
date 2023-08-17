@@ -316,20 +316,22 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
 
 /**
  * @brief G2O vertex for BA, aka. Camera pose of img2
- *
+ * 顶点：采集第二个图像时的相机位姿
  */
 class VertexPose : public g2o::BaseVertex<6, Sophus::SE3d>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
+    // 顶点重置
+    // 初始化相机位姿
     virtual void setToOriginImpl() override
     {
         _estimate = Sophus::SE3d();
     }
 
-    // left multiplication on SE3
-    // update SE3
+    // 顶点更新
+    // 对相机位姿进行左乘更新
     virtual void oplusImpl(const double *update) override
     {
         Eigen::Matrix<double, 6, 1> update_eigen;
@@ -344,16 +346,18 @@ public:
 
 /**
  * @brief G2O edges for BA, aka. 3d pts projection in img2
- *
+ * 边：3D点在第二个图像中的重投影误差
  */
 class EdgeProjection : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexPose>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
+    // 构造函数
     EdgeProjection(const Eigen::Vector3d &pos, const Eigen::Matrix3d &K) : _pos3d(pos), _K(K) {}
 
-    // reprojection error
+    // 计算误差
+    // 这里是计算重投影误差
     virtual void computeError() override
     {
         const VertexPose *v = static_cast<VertexPose *>(_vertices[0]);
@@ -363,7 +367,7 @@ public:
         _error = _measurement - pos_pixel.head<2>();
     }
 
-    // jacobean matrix
+    // 计算雅可比矩阵
     virtual void linearizeOplus() override
     {
         const VertexPose *v = static_cast<VertexPose *>(_vertices[0]);
@@ -410,18 +414,18 @@ void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points
     optimizer.setAlgorithm(solver);  // 设置求解器
     optimizer.setVerbose(true);      // 打开调试输出
 
-    // vertex
+    // 设置顶点，即参数块
     VertexPose *vertex_pose = new VertexPose();  // camera vertex_pose
     vertex_pose->setId(0);
     vertex_pose->setEstimate(Sophus::SE3d());
     optimizer.addVertex(vertex_pose);
 
-    // K_eigen
+    // 相机内参
     Eigen::Matrix3d K_eigen;
     K_eigen << K.at<double>(0, 0), K.at<double>(0, 1), K.at<double>(0, 2), K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
         K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
 
-    // edges
+    // 设置边，即残差块
     int index = 1;
     for (size_t i = 0; i < points_2d.size(); ++i)
     {
@@ -436,6 +440,7 @@ void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points
         index++;
     }
 
+    // 获取优化后的相机位姿
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
     optimizer.setVerbose(true);
     optimizer.initializeOptimization();

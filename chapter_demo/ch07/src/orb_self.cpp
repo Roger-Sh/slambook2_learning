@@ -12,6 +12,7 @@
 std::string first_file = "../../../chapter_demo/ch07/image/1.png";
 std::string second_file = "../../../chapter_demo/ch07/image/2.png";
 
+// 自定义的描述子类型，32x8 = 256bit
 // 32 bit unsigned int, will have 8, 8x32=256bit
 typedef std::vector<uint32_t> DescType;  // Descriptor type
 
@@ -346,13 +347,12 @@ int ORB_pattern[256 * 4] = {
 };
 
 /**
- * compute descriptor of orb keypoints
- * @param img input image
- * @param keypoints detected fast keypoints
- * @param descriptors descriptors
- *
+ * @brief 计算关键点在图像上对应的描述子
  * NOTE: if a keypoint goes outside the image boundary (8 pixels), descriptors will not be computed and will be left as
  * empty
+ * @param img 输入图像
+ * @param keypoints 检测到的关键点
+ * @param descriptors 描述子
  */
 void ComputeORB(const cv::Mat &img, std::vector<cv::KeyPoint> &keypoints, std::vector<DescType> &descriptors)
 {
@@ -390,7 +390,7 @@ void ComputeORB(const cv::Mat &img, std::vector<cv::KeyPoint> &keypoints, std::v
         float cos_theta = m10 / m_sqrt;
 
         // compute the angle of this point
-        DescType desc(8, 0);  // 8 x u32
+        DescType desc(8, 0);  // 8 x u32 = 256bit
         for (int i = 0; i < 8; i++)
         {
             uint32_t d = 0;
@@ -408,6 +408,7 @@ void ComputeORB(const cv::Mat &img, std::vector<cv::KeyPoint> &keypoints, std::v
                 // if p < q
                 if (img.at<uchar>(pp.y, pp.x) < img.at<uchar>(qq.y, qq.x))
                 {
+                    // 按位或
                     d |= 1 << k;
                 }
             }

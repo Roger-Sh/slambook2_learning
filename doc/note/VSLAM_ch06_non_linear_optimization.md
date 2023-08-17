@@ -429,7 +429,7 @@ $$
     \min _{a, b, c} \frac{1}{2} \sum_{i=1}^{N}\left\|y_{i}-\exp \left(a x_{i}^{2}+b x_{i}+c\right)\right\|^{2}
     $$
 
--   误差项
+-   误差项 Cost
     $$
     e_{i}=y_{i}-\exp \left(a x_{i}^{2}+b x_{i}+c\right)
     $$
@@ -456,7 +456,7 @@ $$
     \\
     \\
     
-    \left(\sum_{i=1}^{100} \boldsymbol{J}_{i}\left(\sigma^{2}\right)^{-1} \boldsymbol{J}_{i}^{\mathrm{T}}\right) \Delta \boldsymbol{x}_{k}=\sum_{i=1}^{100}-\boldsymbol{J}_{i}\left(\sigma^{2}\right)^{-1} e_{i}
+    \left(\sum_{i=1}^{100} \boldsymbol{J}_{i}\cdot\left(\sigma^{2}\right)^{-1}\cdot \boldsymbol{J}_{i}^{\mathrm{T}}\right) \Delta \boldsymbol{x}_{k}=\sum_{i=1}^{100}-\boldsymbol{J}_{i}\cdot\left(\sigma^{2}\right)^{-1}\cdot e_{i}
     $$
     
 -   求解 $\boldsymbol{A}\boldsymbol{x} = \boldsymbol{b}$ 问题（参考reference中的资料）
@@ -488,18 +488,23 @@ $$
     \end{aligned}
     $$
 
-    -   参数块, 即优化变量: $x_{1}, \cdots, x_{n}$
-    -   残差块, 即代价函数或误差项: $f_i$ 
-    -   优化变量的上限或下限: $l_j$, $u_j$
-    -   核函数: $\boldsymbol{\rho}(\cdot)$
+    -   参数块（Parameter blocks）, 即优化变量: $x_{1}, \cdots, x_{n}$
+    -   残差块（Residual blocks）, 即代价函数或误差项: $f_i$ 
+    -   优化变量 $x_j$ 的上限或下限: $l_j$, $u_j$
+    -   核函数: $\boldsymbol{\rho}(\cdot)$，可以取恒等函数
 
 -   Ceres求解步骤
 
-    -   定义参数块, 可以是向量, 四元数, 李代数等
+    -   定义参数块
+        -   向量
+        -   四元数
+        -   李代数
     -   定义残差块
-    -   定义残差块的雅可比计算方式
-    -   设置Problem对象, 设置配置信息如迭代次数, 中止条件等
-    -   调用Solve求解
+        -   残差块关联若干个参数块，进行自定义计算，返回残差值
+        -   定义残差块的雅可比计算方式
+    -   设置Problem对象
+        -   设置配置信息如迭代次数, 中止条件等
+        -   调用Solve求解
 
 
 
@@ -511,8 +516,9 @@ $$
 
 -   图优化: 把优化问题表现成图, 能直观看到优化问题的表现
 -   图, 贝叶斯图, 因子图: 
-    -   顶点Vertex, 优化变量
-    -   边Edge, 误差项
+    -   顶点Vertex, **优化变量**
+    -   边Edge, **误差项**
+-   运动相机的图优化例子：
 
 ![image-20220713160400608](VSLAM_ch06_non_linear_optimization.assets/image-20220713160400608.png)
 
@@ -520,7 +526,11 @@ $$
 
 ##### 使用G2O拟合曲线
 
--   当前曲线拟合问题对应的因子图, 只有一个顶点, 带优化的参数 $a,b,c$
+-   曲线拟合问题对应的因子图, 
+    
+    -   一个顶点： 待优化的参数 $a,b,c$
+    -   边：所有观测的数据，作为边
+    
     $$
     y=\exp \left(a x^{2}+b x+c\right)+w
     $$
@@ -535,3 +545,11 @@ $$
 
 
 
+### CPP Demo
+
+-   gaussNewton
+    -   本程序展示了手动实现高斯牛顿法求解非线性优化问题。
+-   ceresCurveFitting
+    -   本程序演示了通过 Ceres 解决曲线拟合的优化问题。
+-   g2oCurveFitting
+    -   本程序演示了通过 G2O 构建因子图，解决曲线拟合问题。
